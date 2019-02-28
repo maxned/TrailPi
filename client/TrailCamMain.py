@@ -50,6 +50,7 @@ def make_connection(mode, image_data = None):
             ClientLogic.execute(sock, image_data)
 
     # done with socket, close it
+    print('Closing socket')
     sock.close()
 
 def run_testing():

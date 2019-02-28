@@ -18,7 +18,7 @@ def execute(sock, image_data):
         # TODO implement the actual image transfer
 
         print('Server ACK\'d transfer request') # DEBUG debugging output
-        message = image_data or 'No data'.encode('ascii') # DEBUG pretend to send image data
+        message = image_data # DEBUG pretend to send image data
         sock.send(message)
         print('Sent image to server...') # DEBUG debugging output
 
