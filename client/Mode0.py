@@ -14,7 +14,7 @@ def execute(sock):
 
     # first message indicates a request to check in
     message = 'alive'.encode('ascii')
-    sock.send(message)
+    sock.sendall(message)
     print('Sent request to server...') # DEBUG debugging output
 
     sock_reply = sock.recv(4).decode('ascii')
@@ -23,7 +23,7 @@ def execute(sock):
     if sock_reply == 'ACK':
         print('Server ACK\'d check-in request') # DEBUG debugging output
         message = get_site_num().encode('ascii')
-        sock.send(message)
+        sock.sendall(message)
         print('Sent identification to server...') # DEBUG debugging output
 
         sock_reply = sock.recv(4).decode('ascii')

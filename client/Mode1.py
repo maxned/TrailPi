@@ -8,7 +8,7 @@ def execute(sock, image_data):
 
     # first message indicates a request to transfer an image
     message = 'image'.encode('ascii')
-    sock.send(message)
+    sock.sendall(message)
     print('Sent request to server...') # DEBUG debugging output
 
     sock_reply = sock.recv(4).decode('ascii')
@@ -19,7 +19,7 @@ def execute(sock, image_data):
 
         print('Server ACK\'d transfer request') # DEBUG debugging output
         message = image_data # DEBUG pretend to send image data
-        sock.send(message)
+        sock.sendall(message)
         print('Sent image to server...') # DEBUG debugging output
 
         sock_reply = sock.recv(4).decode('ascii')
