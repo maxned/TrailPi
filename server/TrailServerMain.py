@@ -1,14 +1,17 @@
 import sys
+assert (sys.version_info > (3, 7)), "Python 3.7 or later is required."
 import socket
 import threading
 import Living
 import base64
 import time
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('TrailServerMain')
 
 # FIXME just put host ip up here as global for testing ease, remove when unnecessary
 HOST_IP = '::1'
-
-assert (sys.version_info > (3, 7)), "Python 3.7 or later is required."
 
 # helpful links for threaded python3 ipv6 server script
 # https://www.geeksforgeeks.org/socket-programming-multi-threading-python/
@@ -29,7 +32,7 @@ def log_request(msg):
         msg - the request to log
     """
     with open('received_requests.log', 'a+') as log_file:
-        print('Logging request to file')
+        logger.info('Logging request to file')
         log_file.write("{0:25} {1}\n".format(time.strftime('%X %x %Z'), msg))
 
 def thread_main(cli, addr):
@@ -42,27 +45,27 @@ def thread_main(cli, addr):
 
     cli.settimeout(60) # times out after 60s of no sending
     while True:
-        print('Trying to receive')
+        logger.info('Trying to receive')
         try:
             # receive first message from client that identifies request type
             data = cli.recv(5).decode('ascii')
-            print('Received data:\'', data, '\'') # DEBUG debugging output
+            logger.debug('Received data: \'{}\''.format(data))
 
             if not data:
-                print('Connection closed by client, closing socket & thread')
+                logger.info('Connection closed by client, closing socket & thread')
                 cli.close()
                 return
         except socket.timeout as err:
-            print('Client timed out, closing socket & thread', err)
+            logger.info('Client timed out, closing socket & thread: {}'.format(err))
             cli.close()
             return
         except:
-            print('Unexpected error')
+            logger.warning('Unexpected error')
             cli.close()
             return
 
         if data == 'alive':
-            print('Client sent a check-in request') # DEBUG debugging output
+            logger.debug('Client sent a check-in request')
             log_request(data)
 
             # send ACK to client
@@ -74,15 +77,15 @@ def thread_main(cli, addr):
                 data = cli.recv(2).decode('ascii')
 
                 if not data:
-                    print('Connection closed by client, closing socket & thread')
+                    logger.info('Connection closed by client, closing socket & thread')
                     cli.close()
                     return
             except socket.timeout as err:
-                print('Client timed out, closing socket & thread', err)
+                logger.info('Client timed out, closing socket & thread: {}'.format(err))
                 cli.close()
                 return
             except:
-                print('Unexpected error')
+                logger.warning('Unexpected error')
                 cli.close()
                 return
 
@@ -91,11 +94,11 @@ def thread_main(cli, addr):
             # send ACK to client
             acknowledge(cli)
 
-            print('Site', data, 'has checked in and is alive') # DEBUG debugging output
+            logger.debug('Site {} has checked in and is alive'.format(data))
             Living.check_in(data)
 
         elif data == 'image':
-            print('Client sent an image transfer request') # DEBUG debugging output
+            logger.debug('Client sent an image transfer request')
             log_request(data)
 
             # send ACK to client
@@ -106,15 +109,15 @@ def thread_main(cli, addr):
                 data = cli.recv(4096) # TODO is this size enough?
 
                 if not data:
-                    print('Connection closed by client, closing socket & thread')
+                    logger.info('Connection closed by client, closing socket & thread')
                     cli.close()
                     return
             except socket.timeout as err:
-                print('Client timed out, closing socket & thread', err)
+                logger.info('Client timed out, closing socket & thread: {}'.format(err))
                 cli.close()
                 return
             except:
-                print('Unexpected error')
+                logger.warning('Unexpected error')
                 cli.close()
                 return
 
@@ -123,7 +126,7 @@ def thread_main(cli, addr):
             # send ACK to client
             acknowledge(cli)
 
-            print('Client transferred data:', data) # DEBUG debugging output
+            logger.debug('Client transferred data {}'.format(data))
             # TODO implement logic to save image on filesystem and add to MySQL database
 
             # example data string to image:
@@ -134,7 +137,7 @@ def thread_main(cli, addr):
         elif data != '':
             # TODO handle unknown request type?
             log_request(data)
-            print('Unhandled request type, closing socket & thread')
+            logger.warning('Unhandled request type, closing socket & thread')
             cli.close()
             return
 
@@ -143,11 +146,11 @@ def main():
     port = 4567
     sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     sock.bind((host, port))
-    print('Socket bound to port', port)
+    logger.info('Socket bound to port {}'.format(port))
 
     # listen on socket
     sock.listen(10)
-    print('Socket listening for clients')
+    logger.info('Socket listening for clients')
 
     # wait until client wants to exit
     while True:
@@ -155,7 +158,7 @@ def main():
         cli, addr = sock.accept()
 
         # start a new thread for client
-        print('Starting thread for new client') # DEBUG debugging output
+        logger.debug('Starting thread for new client')
         threading.Thread(target = thread_main, args = (cli, addr)).start()
 
 

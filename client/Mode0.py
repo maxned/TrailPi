@@ -1,3 +1,8 @@
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('Mode0')
+
 def get_site_num():
     """Returns the identification number for the camera's site.
     """
@@ -15,27 +20,27 @@ def execute(sock):
     # first message indicates a request to check in
     message = 'alive'.encode('ascii')
     sock.sendall(message)
-    print('Sent request to server...') # DEBUG debugging output
+    logger.debug('Sent request to server...')
 
     sock_reply = sock.recv(4).decode('ascii')
-    print('...received reply from server:', sock_reply) # DEBUG debugging output
+    logger.debug('...received reply from server: {}'.format(sock_reply))
 
     if sock_reply == 'ACK':
-        print('Server ACK\'d check-in request') # DEBUG debugging output
+        logger.debug('Server ACK\'d check-in request')
         message = get_site_num().encode('ascii')
         sock.sendall(message)
-        print('Sent identification to server...') # DEBUG debugging output
+        logger.debug('Sent identification to server...')
 
         sock_reply = sock.recv(4).decode('ascii')
-        print('...received reply from server:', sock_reply) # DEBUG debugging output
+        logger.debug('...received reply from server: {}'.format(sock_reply))
 
         if sock_reply == 'ACK':
-            print('Server ACK\'d site identification') # DEBUG debugging output
+            logger.debug('Server ACK\'d site identification')
         else:
-            print('Server didn\'t ACK site identification') # DEBUG debugging output
+            logger.debug('Server didn\'t ACK site identification')
             # TODO handle failed identification
     else:
-        print('Server didn\'t ACK check-in request') # DEBUG debugging output
+        logger.debug('Server didn\'t ACK check-in request')
         # TODO handle failed request
 
 # code below to test just this module

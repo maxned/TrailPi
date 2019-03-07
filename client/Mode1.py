@@ -1,3 +1,8 @@
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('Mode1')
+
 def execute(sock, image_data):
     """Uses the socket to transfer a new image to the server.
 
@@ -9,29 +14,26 @@ def execute(sock, image_data):
     # first message indicates a request to transfer an image
     message = 'image'.encode('ascii')
     sock.sendall(message)
-    print('Sent request to server...') # DEBUG debugging output
+    logger.debug('Sent request to server...')
 
     sock_reply = sock.recv(4).decode('ascii')
-    print('...received reply from server:', sock_reply) # DEBUG debugging output
+    logger.debug('...received reply from server: {}'.format(sock_reply))
 
     if sock_reply == 'ACK':
-        # TODO implement the actual image transfer
-
-        print('Server ACK\'d transfer request') # DEBUG debugging output
-        message = image_data # DEBUG pretend to send image data
-        sock.sendall(message)
-        print('Sent image to server...') # DEBUG debugging output
+        logger.debug('Server ACK\'d transfer request')
+        sock.sendall(image_data)
+        logger.debug('Sent image to server...')
 
         sock_reply = sock.recv(4).decode('ascii')
-        print('...received reply from server:', sock_reply) # DEBUG debugging output
+        logger.debug('...received reply from server: {}'.format(sock_reply))
 
         if sock_reply == 'ACK':
-            print('Server ACK\'d image transfer') # DEBUG debugging output
+            logger.debug('Server ACK\'d image transfer')
         else:
-            print('Server didn\'t ACK image transfer') # DEBUG debugging output
+            logger.debug('Server didn\'t ACK image transfer')
             # TODO handle a failed transfer
     else:
-        print('Server didn\'t ACK transfer request') # DEBUG debugging output
+        logger.debug('Server didn\'t ACK transfer request')
         # TODO handle failed request
 
 # code below to test just this module

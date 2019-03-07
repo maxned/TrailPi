@@ -1,13 +1,17 @@
 import time
 import pickle
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('Living')
 
 try:
     pickle_in = open("site_activity.pickle","rb")
     site_activity = pickle.load(pickle_in)
-    print('Activity log exists, importing') # DEBUG debugging output
+    logger.debug('Activity log exists, importing')
 
 except FileNotFoundError:
-        print('Activity log didn\'t exist, creating') # DEBUG debugging output
+        logger.debug('Activity log didn\'t exist, creating')
         # just initialize each site with current time
         site_activity = {}
         for site in range(1, 41):
@@ -24,17 +28,17 @@ def check_in(site):
     Arguments:
         site - the site that is checking in
     """
-    print('Checking in site', site, 'at', time.localtime(time.time()))
+    logger.info('Checking in site {} at {}'.format(site, time.localtime(time.time())))
     site_activity[site] = time.localtime(time.time())
 
     # serialize site_activity and log it to file for redundancy
     pickle_out = open("site_activity.pickle","wb")
     pickle.dump(site_activity, pickle_out)
     pickle_out.close()
-    print('Activity log updated') # DEBUG debugging output
+    logger.debug('Activity log updated')
 
     for key, value in site_activity.items():
         print(key, value)
 
 if __name__ == '__main__':
-    print('Testing Living.py')
+    logger.info('Testing Living.py')
