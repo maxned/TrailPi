@@ -7,8 +7,26 @@ import base64
 import time
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+from flask import Flask, request, json
+import mysql.connector
+from mysql.connector import errorcode
+
+logging.basicConfig(level = logging.DEBUG)
 logger = logging.getLogger('TrailServerMain')
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'tpisctkey20190203'
+
+try:
+    myDB = mysql.connector.connect(user = 'TrailPiAdmin', host = 'localhost',
+                                   password = 'tmppw', database = 'TrailPiImages')
+except mysql.connector.Error as err:
+    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+        logger.warning('Something is wrong with your user name or password')
+    elif err.errno == errorcode.ER_BAD_DB_ERROR:
+        logger.warning('Database does not exist')
+    else:
+        logger.warning('Encountered error: {}'.format(err))
 
 # FIXME just put host ip up here as global for testing ease, remove when unnecessary
 HOST_IP = '::1'
@@ -161,6 +179,44 @@ def main():
         logger.debug('Starting thread for new client')
         threading.Thread(target = thread_main, args = (cli, addr)).start()
 
+@app.route("/")
+def home():
+    return "Hello World"
+
+@app.route("/TrailPiServer/api/v1.0/check_in", methods=['POST'])
+def api_checkin():
+    if request.headers['Content-Type'] == 'text/plain':
+        logger.info('Request data: {}'.format(request.data))
+
+        # TODO interact with living
+
+        return 'OK', 200
+    else:
+        logger.warning('Unsupported data type')
+        return 'Unsupported data type', 415
+
+@app.route("/TrailPiServer/api/v1.0/image_transfer", methods=['POST'])
+def api_image_transfer():
+    if request.headers['Content-Type'] == 'image/png':
+        logger.info('Request data: {}'.format(request.data))
+
+        mycursor = myDB.cursor()
+
+        sql = 'INSERT INTO Images (name, path) VALUES (%s, %s)'
+        val = [('name1', 'path1'),
+               ('name2, path2')]
+
+        mycursor.executemany(sql, val)
+        myDB.commit()
+
+        return 'OK', 200
+    else:
+        logger.warning('Unsupported data type')
+        return 'Unsupported data type', 415
+
+def messageReceived(methods = ['GET', 'POST']):
+    logger.info('Message was received!')
 
 if __name__ == '__main__':
-    main()
+    #main()
+    app.run(debug = True)

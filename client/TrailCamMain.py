@@ -4,7 +4,7 @@ import socket
 import base64
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level = logging.DEBUG)
 logger = logging.getLogger('TrailCamMain')
 
 # helpful link for threaded python3 ipv6 server script
