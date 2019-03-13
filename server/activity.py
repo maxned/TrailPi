@@ -2,6 +2,9 @@ import logging
 import time
 import pickle
 
+logging.basicConfig(level = logging.DEBUG)
+logger = logging.getLogger('activity')
+
 def write_file(activity):
     """Serializes the passed activity object and writes to file for reducdancy
 
@@ -33,14 +36,10 @@ def check_in(site):
 
     return
 
-logging.basicConfig(level = logging.DEBUG)
-logger = logging.getLogger('Living')
-
 try:
-    logger.debug('Activity log exists, importing')
     pickle_in = open("site_activity.pickle","rb")
     site_activity = pickle.load(pickle_in)
-
+    logger.debug('Activity log existed, imported')
 except FileNotFoundError:
         logger.debug('Activity log didn\'t exist, creating')
         # just initialize each site with current time
