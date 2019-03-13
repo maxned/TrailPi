@@ -6,23 +6,23 @@ import mysql.connector
 from mysql.connector import errorcode
 import os
 from werkzeug.utils import secure_filename
-import Living
+import activity
 
-def allowed_site(site):
+def is_allowed_site(site):
     """Returns whether passed site is valid
 
     Arguments:
         site - identification of the site checking in
     """
     try:
-        as_int = int(site)
+        site_as_int = int(site)
     except ValueError:
         logger.warning('Couldn\'t translate site to int')
         return False
 
-    return 0 <= as_int <= 40
+    return 0 <= site_as_int <= 40
 
-def allowed_file(filename):
+def is_allowed_file(filename):
     """Returns whether passed filename is valid
 
     Arguments:
@@ -30,50 +30,46 @@ def allowed_file(filename):
     """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def message_received(methods = ['GET', 'POST']):
-    """Logs that a message was received
-
-    Arguments:
-        None
-    """
-
-    logger.info('Message was received!')
-    return
-
-@app.route("/")
-def home():
-    return "Hello World"
-
 @app.route("/TrailPiServer/api/check_in", methods=['POST'])
-def api_checkin():
+def api_check_in():
     if 'site' not in request.data:
-        logger.warning('No site part in request')
-        return 'Missing site', 400
+        logger.warning('No site in request')
+        return 'Missing site field', 400
 
     if request.headers['Content-Type'] != 'text/plain':
-        logger.warning('Unsupported data type')
+        logger.warning('Unsupported data type in request')
         return 'Unsupported data type', 415
 
     site = request.data['site']
 
-    if site == '':
+    if site[1] == '':
         logger.warning('Empty site in request')
-        return 'Missing site', 400
+        return 'Missing site identification', 400
 
-    if allowed_site(site):
-        logger.info('Request data: {}'.format(request.data))
-
-        Living.check_in(request.data)
+    if is_allowed_site(site[1]):
+        logger.info('Data: {}'.format(request.data))
+        activity.check_in(request.data)
 
         return 'OK', 200
+    else:
+        logger.warning('Invalid site in request')
+        return 'Invalid site', 400
 
     return 'Unexpected error with request', 400
 
 @app.route("/TrailPiServer/api/image_transfer", methods=['POST'])
 def api_image_transfer():
     if 'file' not in request.files:
-        logger.warning('No file part in request')
-        return 'Missing file', 400
+        logger.warning('No file in request')
+        return 'Missing file field', 400
+
+    if 'site' not in request.data:
+        logger.warning('No site in request')
+        return 'Missing site field', 400
+
+    if request.headers['Content-Type'] != 'image/png':
+        logger.warning('Unsupported data type in request')
+        return 'Unsupported data type', 415
 
     file = request.files['file']
 
@@ -81,7 +77,7 @@ def api_image_transfer():
         logger.warning('No selected file name')
         return 'Missing filename', 400
 
-    if file and allowed_file(file.filename):
+    if file and is_allowed_file(file.filename):
         filename = secure_filename(file.filename)
 
         # TODO dynamically determine a save location
