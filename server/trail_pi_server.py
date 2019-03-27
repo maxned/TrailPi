@@ -1,12 +1,13 @@
 from sys import version_info, exit
-assert (version_info > (3, 7)), "Python 3.7 or later is required."
+assert (version_info > (3, 6)), "Python 3.7 or later is required."
 import logging
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import mysql.connector
 from mysql.connector import errorcode
 import os
 from werkzeug.utils import secure_filename
 import activity
+import json
 
 UPLOAD_FOLDER = '/home/brody/GitHub/TrailPi/server/uploaded_images' # FIXME not the actual path
 ALLOWED_EXTENSIONS = set(['png']) # TODO support more extensions?
@@ -15,7 +16,7 @@ logging.basicConfig(level = logging.DEBUG)
 logger = logging.getLogger('TrailServerMain')
 
 app = Flask(__name__)
-app.secret_key = b't_pi!sctkey%20190203#'
+app.secret_key = 't_pi!sctkey%20190203#'
 """
 try:
     # TODO set more permanent information
@@ -56,51 +57,65 @@ def is_allowed_file(filename):
 
 @app.route("/TrailPiServer/api/check_in", methods=['POST'])
 def api_check_in():
-    if b'site' not in request.data:
+    '''if 'site' not in request.data:
         logger.warning('No site in request')
-        return 'Missing site field', 400
+        return jsonify({'status': 'Missing site field'}), 400
 
-    if request.headers['Content-Type'] != 'text/plain':
+    if request.headers['Content-Type'] != 'application/json':
         logger.warning('Unsupported data type in request')
-        return 'Unsupported data type', 415
+        return jsonify({'status': 'Unsupported data type'}), 415'''
 
-    logger.debug('Data: {}'.format(request.data.decode()))
-    site = request.data.decode()[5:] # data comes through as 'site=##'
+    data = request.get_json()
+    site = data['site']
+    logger.debug('Data: {}'.format(data))
+
     logger.debug('Site: {}'.format(site))
 
     if site == '':
         logger.warning('Empty site in request')
-        return 'Missing site identification', 400
+        return jsonify({'status': 'Missing site identification'}), 400
 
     if is_allowed_site(site):
         activity.check_in(site)
 
-        return 'OK', 200
+        return jsonify({'status': 'OK'}), 200
     else:
         logger.warning('Invalid site in request')
-        return 'Invalid site', 400
+        return jsonify({'status': 'Invalid site'}), 400
 
-    return 'Unexpected error with request', 400
+    return jsonify({'status': 'Unexpected error with request'}), 400
 
 @app.route("/TrailPiServer/api/image_transfer", methods=['POST'])
 def api_image_transfer():
-    logger.debug('Data: {}'.format(request.data))
-    logger.debug('Files: {}'.format(request.files))
+    #logger.debug('Data: {}'.format(request.data))
+    #logger.debug('Files: {}'.format(request.files))
 
-    if b'file' not in request.data:
+    '''if 'file' not in request.data:
         logger.warning('No file in request')
-        return 'Missing file field', 400
+        return 'Missing file field', 400'''
 
-    if b'site' not in request.data:
+    '''if b'site' not in request.data:
         logger.warning('No site in request')
-        return 'Missing site field', 400
+        return 'Missing site field', 400'''
 
-    if request.headers['Content-Type'] != 'image/png':
+    '''if request.headers['Content-Type'] != 'image/png' or request.headers['Content-Type'] != 'image/jpg':
         logger.warning('Unsupported data type in request')
-        return 'Unsupported data type', 415
+        return 'Unsupported data type', 415'''
 
+    if 'file' not in request.files: 
+        return jsonify({'status': 'no file found'}), 400
+
+    for item in request.files:
+        logger.debug(item)
+
+    data = request.files['data']
     file = request.files['file']
-    site = request.data.decode()[5:] # data comes through as 'site=##'
+    site = data['site']
+
+    #data = request.get_json()
+    #site = data['site']
+    #site = request.data.decode()[5:] # data comes through as 'site=##'
+    logger.debug('File: {}'.format(file))
     logger.debug('Site: {}'.format(site))
 
     if file.filename == '':
@@ -121,7 +136,7 @@ def api_image_transfer():
         mycursor.executemany(sql, val)
         myDB.commit()"""
 
-        return 'OK', 200
+        return jsonify({'status': 'OK'}), 200
 
     logger.warning('Unexpected error')
     return 'Unexpected error with request', 400

@@ -1,8 +1,9 @@
 from sys import version_info
-assert (version_info > (3, 7)), "Python 3.7 or later is required."
+assert (version_info > (3, 6)), "Python 3.7 or later is required."
 import logging
 import os
 import requests
+import json
 
 logging.basicConfig(level = logging.DEBUG)
 logger = logging.getLogger('CameraClientAPI')
@@ -27,13 +28,13 @@ def check_in():
     """
     url = "http://127.0.0.1:5000/TrailPiServer/api/check_in"
 
-    headers = {'Content-Type': 'text/plain'}
+    headers = {'Content-Type': 'application/json'}
 
-    data = {'site': get_site_num()}
+    data = {"site": get_site_num()}
 
     logger.info('Sending post: url = {}, data = {}, headers = {}'.format(url, data, headers))
-    response = requests.post(url, data = data, headers = headers)
-    logger.info('Response: {}'.format(response))
+    response = requests.post(url, data=json.dumps(data), headers=headers)
+    logger.info('Response: {}'.format(response.content))
 
     return response
 
@@ -48,14 +49,16 @@ def send_image(file_path):
 
     url = "http://127.0.0.1:5000/TrailPiServer/api/image_transfer"
 
-    headers = {'Content-Type': 'image/png'}
+    site = {'site': get_site_num()}
 
-    data = {'file': (os.path.basename(file_path), open(file_path, 'rb')),
-            'site': get_site_num()}
+    files = {
+        'data': json.dumps(site),
+        'file': (os.path.basename(file_path), open(file_path, 'rb'), 'application/octet-stream')
+    }
 
-    logger.info('Sending post: url = {}, data = {}, headers = {}'.format(url, data, headers))
-    response = requests.post(url, data = data, headers = headers)
-    logger.info('Response: {}'.format(response))
+    logger.info('files: {}'.format(files))
+    response = requests.post(url, files=files)
+    logger.info('Response: {}'.format(response.content))
 
     return response
 
@@ -71,9 +74,11 @@ def run_testing():
             val = int(choice)
             if val == 0:
                 check_in()
+                break
             elif val == 1:
-                test_image = '/home/brody/GitHub/TrailPi/client/test_image.png'
+                test_image = 'test_image.png'
                 send_image(test_image)
+                break
             elif val == 123:
                 logger.info('Done testing')
                 break
