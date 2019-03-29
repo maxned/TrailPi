@@ -57,70 +57,65 @@ def is_allowed_file(filename):
 
 @app.route("/TrailPiServer/api/check_in", methods=['POST'])
 def api_check_in():
-    '''if 'site' not in request.data:
-        logger.warning('No site in request')
-        return jsonify({'status': 'Missing site field'}), 400
-
-    if request.headers['Content-Type'] != 'application/json':
-        logger.warning('Unsupported data type in request')
-        return jsonify({'status': 'Unsupported data type'}), 415'''
+    ''' TODO -> check for content-type?? '''
 
     data = request.get_json()
-    site = data['site']
     logger.debug('Data: {}'.format(data))
 
+    if 'site' not in data:
+        logger.warning('No site in request')
+        response = jsonify({'status': 'Missing site field'})
+        return response, 400
+
+    site = data['site']
     logger.debug('Site: {}'.format(site))
 
     if site == '':
         logger.warning('Empty site in request')
-        return jsonify({'status': 'Missing site identification'}), 400
+        response = jsonify({'status': 'Missing site identification'})
+        return response, 400
 
     if is_allowed_site(site):
         activity.check_in(site)
-
-        return jsonify({'status': 'OK'}), 200
+        response = jsonify({'status': 'OK'})
+        return response, 200
     else:
         logger.warning('Invalid site in request')
-        return jsonify({'status': 'Invalid site'}), 400
+        response = jsonify({'status': 'Invalid site'})
+        return response, 400
 
-    return jsonify({'status': 'Unexpected error with request'}), 400
+    response = jsonify({'status': 'Unexpected error with request'})
+    return response, 500
 
 @app.route("/TrailPiServer/api/image_transfer", methods=['POST'])
 def api_image_transfer():
-    #logger.debug('Data: {}'.format(request.data))
-    #logger.debug('Files: {}'.format(request.files))
-
-    '''if 'file' not in request.data:
-        logger.warning('No file in request')
-        return 'Missing file field', 400'''
-
-    '''if b'site' not in request.data:
-        logger.warning('No site in request')
-        return 'Missing site field', 400'''
-
-    '''if request.headers['Content-Type'] != 'image/png' or request.headers['Content-Type'] != 'image/jpg':
-        logger.warning('Unsupported data type in request')
-        return 'Unsupported data type', 415'''
+    ''' TODO -> check for content-type?? '''
 
     if 'file' not in request.files: 
-        return jsonify({'status': 'no file found'}), 400
+        logger.warning('Missing file field in POST')
+        response = jsonify({'status': 'missing file field'})
+        return response, 400
 
-    for item in request.files:
-        logger.debug(item)
+    if 'data' not in request.files: 
+        logger.warning('Missing data in POST')
+        response = jsonify({'status': 'missing data field'})
+        return response, 400
 
-    data = request.files['data']
     file = request.files['file']
-    site = data['site']
+    data = json.load(request.files['data'])
 
-    #data = request.get_json()
-    #site = data['site']
-    #site = request.data.decode()[5:] # data comes through as 'site=##'
-    logger.debug('File: {}'.format(file))
-    logger.debug('Site: {}'.format(site))
+    if 'site' not in data:
+        logger.warning('Missing site in POST')
+        response = jsonify({'status': 'missing site number'})
+        return response, 400
 
     if file.filename == '':
-        logger.warning('No selected file name')
-        return 'Missing filename', 400
+        logger.warning('No selected file name in POST')
+        response = jsonify({'status': 'missing file name'})
+        return response, 400
+
+    logger.debug('File: {}'.format(file))
+    logger.debug('Data: {}'.format(data))
 
     if file and is_allowed_file(file.filename):
         filename = secure_filename(file.filename)
@@ -136,10 +131,12 @@ def api_image_transfer():
         mycursor.executemany(sql, val)
         myDB.commit()"""
 
-        return jsonify({'status': 'OK'}), 200
+        response = jsonify({'status': 'OK'})
+        return response, 200
 
     logger.warning('Unexpected error')
-    return 'Unexpected error with request', 400
+    response = jsonify({'status': 'unexpected error with request'})
+    return response, 500
 
 if __name__ == "__main__":
     app.run(debug = True)

@@ -26,11 +26,11 @@ def check_in():
 
     Returns the response from the server.
     """
-    url = "http://127.0.0.1:5000/TrailPiServer/api/check_in"
+    url = 'http://127.0.0.1:5000/TrailPiServer/api/check_in'
 
     headers = {'Content-Type': 'application/json'}
 
-    data = {"site": get_site_num()}
+    data = {'site': get_site_num()}
 
     logger.info('Sending post: url = {}, data = {}, headers = {}'.format(url, data, headers))
     response = requests.post(url, data=json.dumps(data), headers=headers)
@@ -47,14 +47,14 @@ def send_image(file_path):
     Returns the response from the server.
     """
 
-    url = "http://127.0.0.1:5000/TrailPiServer/api/image_transfer"
+    url = 'http://127.0.0.1:5000/TrailPiServer/api/image_transfer'
 
-    site = {'site': get_site_num()}
+    data = {'site': get_site_num()}
 
-    files = {
-        'data': json.dumps(site),
-        'file': (os.path.basename(file_path), open(file_path, 'rb'), 'application/octet-stream')
-    }
+    files = [
+        ('file', (file_path, open(file_path, 'rb'), 'application/octet')),
+        ('data', ('data', json.dumps(data), 'application/json')), # have to pass json as a file object for flask
+    ]
 
     logger.info('files: {}'.format(files))
     response = requests.post(url, files=files)
@@ -88,6 +88,6 @@ def run_testing():
             print('Input wasn\'t a number!')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     logger.info('Testing camera_client_api.py')
     run_testing()
