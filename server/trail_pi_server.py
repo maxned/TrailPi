@@ -8,6 +8,7 @@ import os
 from werkzeug.utils import secure_filename
 import activity
 import json
+import boto3
 
 UPLOAD_FOLDER = '/home/brody/GitHub/TrailPi/server/uploaded_images' # FIXME not the actual path
 ALLOWED_EXTENSIONS = set(['png']) # TODO support more extensions?
@@ -17,6 +18,16 @@ logger = logging.getLogger('TrailServerMain')
 
 application = app = Flask(__name__) # needs to be named "application" for elastic beanstalk
 app.secret_key = 't_pi!sctkey%20190203#' 
+
+# AWS S3 configuration
+BUCKET_NAME = os.environ.get('BUCKET')
+AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
+AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
+s3 = boto3.resource(
+    's3', 
+    aws_access_key_id=AWS_ACCESS_KEY, 
+    aws_secret_access_key=AWS_SECRET_KEY)
+bucket = s3.Bucket(BUCKET_NAME)
 
 """
 try:
@@ -120,6 +131,7 @@ def api_image_transfer():
 
     if file and is_allowed_file(file.filename):
         filename = secure_filename(file.filename)
+        bucket.Object(filename).put(Body=file)
 
         # TODO dynamically determine a save location
         #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -132,7 +144,7 @@ def api_image_transfer():
         mycursor.executemany(sql, val)
         myDB.commit()"""
 
-        response = jsonify({'status': 'OK'})
+        response = jsonify({'status': 'image upload SUCCESS'})
         return response, 200
 
     logger.warning('Unexpected error')
