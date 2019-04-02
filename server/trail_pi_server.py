@@ -15,8 +15,9 @@ ALLOWED_EXTENSIONS = set(['png']) # TODO support more extensions?
 logging.basicConfig(level = logging.DEBUG)
 logger = logging.getLogger('TrailServerMain')
 
-app = Flask(__name__)
-app.secret_key = 't_pi!sctkey%20190203#'
+application = app = Flask(__name__) # needs to be named "application" for elastic beanstalk
+app.secret_key = 't_pi!sctkey%20190203#' 
+
 """
 try:
     # TODO set more permanent information
@@ -138,5 +139,5 @@ def api_image_transfer():
     response = jsonify({'status': 'unexpected error with request'})
     return response, 500
 
-if __name__ == "__main__":
-    app.run(debug = True)
+if __name__ == '__main__':
+    application.run(debug = True)
