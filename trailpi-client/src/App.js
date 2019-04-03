@@ -1,27 +1,20 @@
-import React, { Component } from 'react';
-import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
+import React from 'react';
+import './App.scss';
 
-import { defaultLocation, mapMarkers } from './components/common/mapConfig';
+import ReserveMap from './components/map/ReserveMap';
+import Sidebar from './components/sidebar/Sidebar';
 
-class App extends Component {
+class App extends React.Component {
   render() {
-    const position = [defaultLocation.lat, defaultLocation.lng]
     return (
-      <Map center={position} zoom={defaultLocation.zoom}>
-        <TileLayer
-          attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {mapMarkers.map((marker, key) => {
-          return (
-            <Marker position={marker.position}>
-              <Popup>
-                <b>{marker.name}</b>
-              </Popup>
-            </Marker>
-          );
-        })}
-      </Map>
+      <div className='wrapper'>
+        <div className='sidebar-wrapper'>
+          <Sidebar />
+        </div>
+        <div className='map-wrapper'>
+          <ReserveMap />
+        </div>      
+      </div>
     );
   }
 }

@@ -1,0 +1,13 @@
+.wrapper {
+  display: flex;
+  flex-direction: row;
+
+  .sidebar-wrapper {
+    flex: 20%;
+    border-right: 1px solid #888;
+  }
+
+  .map-wrapper {
+    flex: 80%;
+  }
+}
