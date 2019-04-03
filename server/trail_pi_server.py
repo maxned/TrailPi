@@ -151,5 +151,22 @@ def api_image_transfer():
     response = jsonify({'status': 'unexpected error with request'})
     return response, 500
 
+# TODO: find a way to do this with boto3 resource instead of client
+@app.route('/TrailPiServer/api/files', methods=['GET'])
+def get_files(): 
+    client = boto3.client(
+        's3', 
+        aws_access_key_id=AWS_ACCESS_KEY, 
+        aws_secret_access_key=AWS_SECRET_KEY
+    )
+    files = client.list_objects_v2(Bucket='trailpi-images')
+
+    filenames = []
+    for obj in files['Contents']:
+        filenames.append(obj['Key'])
+
+    response = jsonify({'filenames': filenames})
+    return response, 200
+
 if __name__ == '__main__':
     application.run(debug = True)
