@@ -6,6 +6,7 @@ import smbus
 import time
 import signal
 import io
+import piexif
 
 pir = None
 relay = None
@@ -53,6 +54,19 @@ def set_pir_state(state):
     else:
         pir.when_motion = None
 
+def save_picture(image, timestamp):
+    if image:
+        # Change the EXIF data of the image to encode the site number
+        image_stream = io.BytesIO()
+        image_exif = piexif.load(image)
+        image_exif["Exif"][piexif.ExifIFD.SubjectDistanceRange] = 300
+        image_exif = piexif.dump(image_exif)
+        piexif.insert(image_exif, image, image_stream)
+
+        # Save image to disk
+        with open('images/{}.jpg'.format(timestamp), 'wb') as file:
+            file.write(image_stream.getvalue())
+
 def begin_image_capture():
     #camera = PiCamera(resolution=(3280, 2464))
     camera = PiCamera(resolution=(640, 480))
@@ -79,9 +93,7 @@ def begin_image_capture():
 
             # Save buffered images to disk
             for image, im_timestamp in image_buffer.get():
-                if image:
-                    with open('images/{}.jpg'.format(im_timestamp), 'wb') as file:
-                        file.write(image)
+                save_picture(image, im_timestamp)
 
             # Clear buffered images
             image_buffer.clear()
@@ -91,9 +103,9 @@ def begin_image_capture():
             left_to_save = buffer_size + 1
 
         if left_to_save > 0:
-            with open('images/{}.jpg'.format(timestamp), 'wb') as file:
-                file.write(stream.getvalue())
-                left_to_save -= 1
+            # These are the images saved to disk after the take_picture event
+            save_picture(stream.getvalue(), timestamp)
+            left_to_save -= 1
         else:
             # Save images into buffer if not saving them to disk
             # Save as tuple together with the timestamp
