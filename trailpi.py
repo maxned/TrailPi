@@ -7,6 +7,7 @@ import time
 import signal
 import io
 import piexif
+import os
 
 pir = None
 relay = None
@@ -67,6 +68,10 @@ def save_picture(image, timestamp):
         with open('images/{}.jpg'.format(timestamp), 'wb') as file:
             file.write(image_stream.getvalue())
 
+            # Make sure file is saved to disk so it can be uploaded
+            file.flush()
+            os.fsync(file.fileno())
+
 def begin_image_capture():
     #camera = PiCamera(resolution=(3280, 2464))
     camera = PiCamera(resolution=(640, 480))
@@ -84,7 +89,7 @@ def begin_image_capture():
     for capture in camera.capture_continuous(stream, format='jpeg'):
 
         # Timestamp the image
-        timestamp = datetime.now().strftime("%d:%m:%y-%H:%M:%S:%f")
+        timestamp = datetime.now().strftime("%m:%d:%y-%H:%M:%S:%f")
 
         # Event happened so save buffered images and start saving future images
         global take_picture
