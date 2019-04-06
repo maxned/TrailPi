@@ -57,6 +57,8 @@ while True:
 
         object_detected = True
 
+    object_detected = True
+
     # If object is detected, save the image
     if object_detected:
         # Save full resolution current frame
