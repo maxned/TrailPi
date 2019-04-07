@@ -12,16 +12,15 @@ def upload_image(image_name):
     data = { "site" : 14 }
 
     files = [
-        ("file", (image_name, open(image_path, 'rb'), 'application/octet')),
-        ("data", ("data", json.dumps(data), 'application/json')),
+        ("file", (image_name, open(image_path, 'rb'), "application/octet")),
+        ("data", ("data", json.dumps(data), "application/json")),
     ]
 
     response = requests.post(url, files=files)
+    print(response.status_code)
     print(response.content)
 
-    # Delete image if successfully uploaded
-    if response.status_code == 200:
-        os.remove(image_path)
+    return response
 
 # An image is valid if the date in the filename is greater than 3 seconds old
 # to make sure it has been saved to disk completely
@@ -47,7 +46,11 @@ if __name__== "__main__":
 
     while True:
         for image in uploadable_images():
-            upload_image(image)
+            response = upload_image(image)
+
+            # Delete image if successfully uploaded
+            if response.status_code == 200:
+                os.remove("images/{}".format(image))
 
         # Check every 5 seconds
         time.sleep(5)
