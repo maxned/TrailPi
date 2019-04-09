@@ -103,7 +103,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-server/trailpi-server
 
 # Spyder project settings
 .spyderproject
