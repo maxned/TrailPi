@@ -1,4 +1,5 @@
 import React from 'react';
+import './Sidebar.scss';
 
 class Sidebar extends React.Component {
   constructor() {
@@ -24,13 +25,13 @@ class Sidebar extends React.Component {
   render() {
     const s3BucketURL = 'https://s3-us-west-2.amazonaws.com/trailpi-images/';
     return (
-      <div>
+      <div className='sidebar-wrapper'>
         <div onClick={() => this.handleClick()}>Press me!</div>
         {this.state.images.map((imageName, key) => {
           let imageURL = s3BucketURL + imageName;
           return (
-            <div key={key}>
-              <img src={imageURL}/>
+            <div key={key} className='image-wrapper'>
+                <img src={imageURL} /> 
             </div>
           );
         })}
