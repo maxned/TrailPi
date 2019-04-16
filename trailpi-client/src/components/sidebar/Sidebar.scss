@@ -1,6 +1,12 @@
 .sidebar-wrapper {
   height: 100vh;
 
+  .datepicker-wrapper {
+    width: 100%;
+    margin-top: 20px;
+    margin-left: 60px; // TODO - fix this into margin: 0 auto
+  }
+
   .image-wrapper {
     max-width: 200px;
     max-height: 200px; 

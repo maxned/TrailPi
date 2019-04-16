@@ -5,7 +5,7 @@ import { defaultLocation, mapMarkers } from '../common/mapConfig';
 
 class ReserveMap extends React.Component {
   render() {
-    const position = [defaultLocation.lat, defaultLocation.lng]
+    const position = [defaultLocation.lat, defaultLocation.lng];
     return (
       <Map center={position} zoom={defaultLocation.zoom}>
         <TileLayer

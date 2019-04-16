@@ -6,6 +6,7 @@
     "leaflet": "^1.4.0",
     "node-sass": "^4.11.0",
     "react": "^16.8.4",
+    "react-datepicker": "^2.4.0",
     "react-dom": "^16.8.4",
     "react-leaflet": "^2.2.1",
     "react-scripts": "2.1.8"
