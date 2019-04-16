@@ -3,18 +3,21 @@ import time
 import requests
 import json
 
+config = json.load(open("trailpi_config.json"))
+
 def check_in():
-    url = "http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/check_in"
-    data = { "site" : 14 }
+    data = { "site" : config["site_number"] }
     headers = { "Content-Type" : "application/json" }
-    response = requests.post(url, data=json.dumps(data), headers=headers)
-    print(response.status_code)
-    print(response.content)
+    response = requests.post(config["check_in_url"], data=json.dumps(data), headers=headers)
+
+    if config["debug"]:
+        print(response.status_code)
+        print(response.content)
 
 if __name__== "__main__":
 
     while True:
         check_in()
 
-        # Check in every 30 min
-        time.sleep(30 * 60)
+        # Check in every so often
+        time.sleep(config["check_in_interval_sec"])

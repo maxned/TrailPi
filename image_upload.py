@@ -5,40 +5,43 @@ import time
 import requests
 import json
 
-def upload_image(image_name):
-    image_path = "images/{}".format(image_name) # Add the directory
+config = json.load(open("trailpi_config.json"))
 
-    url = "http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/image_transfer"
-    data = { "site" : 14 }
+def upload_image(image_name):
+    image_path = "{}/{}".format(config["image_folder"], image_name) # Add the directory
+
+    data = { "site" : config["site_number"] }
 
     files = [
         ("file", (image_name, open(image_path, 'rb'), "application/octet")),
         ("data", ("data", json.dumps(data), "application/json")),
     ]
 
-    response = requests.post(url, files=files)
-    print(response.status_code)
-    print(response.content)
+    response = requests.post(config["image_upload_url"], files=files)
+
+    if config["debug"]:
+        print(response.status_code)
+        print(response.content)
 
     return response
 
-# An image is valid if the date in the filename is greater than 3 seconds old
+# An image is valid if the date in the filename is greater than a few seconds old
 # to make sure it has been saved to disk completely
 # Return a bool whether an image is valid
 def valid_image(image_name):
     image_name = image_name[:-4] # Strip the .jpg at the end of the filename
-    image_time = datetime.strptime(image_name, "%m:%d:%y-%H:%M:%S:%f") # Same format as trailpi.py
+    image_time = datetime.strptime(image_name, config["image_timestamp_format"]) # Same format as trailpi.py
     now = datetime.now()
 
     delta = now - image_time
-    if delta.seconds >= 3:
+    if delta.seconds >= config["image_upload_valid_image_delta"]:
         return True
     else:
         return False
 
 # Return a list of image names that should be uploaded right now
 def uploadable_images():
-    images = os.listdir("images")
+    images = os.listdir(config["image_folder"])
     valid_images = [image for image in images if valid_image(image)]
     return valid_images
 
@@ -50,7 +53,7 @@ if __name__== "__main__":
 
             # Delete image if successfully uploaded
             if response.status_code == 200:
-                os.remove("images/{}".format(image))
+                os.remove("{}/{}".format(config["image_folder"], image))
 
         # Check every 5 seconds
-        time.sleep(5)
+        time.sleep(config["image_upload_check_interval_sec"])
