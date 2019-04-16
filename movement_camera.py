@@ -6,7 +6,7 @@ import json
 import time
 import cv2
 
-config = json.load(open("config.json"))
+config = json.load(open("movement_config.json"))
 
 camera = PiCamera()
 camera.resolution = tuple(config["full_res"])
