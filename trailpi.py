@@ -68,15 +68,19 @@ def save_picture(image, timestamp):
         piexif.insert(image_exif, image, image_stream)
 
         # Save image to disk
-        with open('{}/{}.jpg'.format(config["image_folder"], timestamp), 'wb') as file:
-            file.write(image_stream.getvalue())
+        try:
+            with open('{}/{}.jpg'.format(config["image_folder"], timestamp), 'wb') as file:
+                file.write(image_stream.getvalue())
 
-            # Make sure file is saved to disk so it can be uploaded
-            file.flush()
-            os.fsync(file.fileno())
+                # Make sure file is saved to disk so it can be uploaded
+                file.flush()
+                os.fsync(file.fileno())
 
+                if config["debug"]:
+                    print("Saved image: {}.jpg".format(timestamp))
+        except:
             if config["debug"]:
-                print("Saved image: {}.jpg".format(timestamp))
+                print("Failed saving image to disk: {}".format(timestamp))
 
 def begin_image_capture():
     camera = PiCamera(resolution=tuple(config["resolution"]))

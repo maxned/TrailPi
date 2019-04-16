@@ -10,14 +10,29 @@ config = json.load(open("trailpi_config.json"))
 def upload_image(image_name):
     image_path = "{}/{}".format(config["image_folder"], image_name) # Add the directory
 
-    data = { "site" : config["site_number"] }
+    site_data = { "site" : config["site_number"] }
+    image_data = None
+
+    try:
+        image_data = open(image_path, 'rb')
+    except:
+        if config["debug"]:
+            print("Image cannot be opened: {}".format(image_path))
+
+        return requests.models.Response()
 
     files = [
-        ("file", (image_name, open(image_path, 'rb'), "application/octet")),
-        ("data", ("data", json.dumps(data), "application/json")),
+        ("file", (image_name, image_data, "application/octet")),
+        ("data", ("data", json.dumps(site_data), "application/json")),
     ]
 
-    response = requests.post(config["image_upload_url"], files=files)
+    try:
+        response = requests.post(config["image_upload_url"], files=files)
+    except:
+        if config["debug"]:
+            print("POST request failed")
+
+        return requests.models.Response()
 
     if config["debug"]:
         print(response.status_code)
