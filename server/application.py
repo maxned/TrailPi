@@ -2,8 +2,8 @@ from sys import version_info, exit
 assert (version_info > (3, 6)), "Python 3.7 or later is required."
 import logging
 from flask import Flask, request, jsonify
-import mysql.connector
-from mysql.connector import errorcode
+#import mysql.connector
+#from mysql.connector import errorcode
 import os
 from werkzeug.utils import secure_filename
 import activity
@@ -11,7 +11,7 @@ import json
 import boto3
 
 UPLOAD_FOLDER = '/home/brody/GitHub/TrailPi/server/uploaded_images' # FIXME not the actual path
-ALLOWED_EXTENSIONS = set(['png']) # TODO support more extensions?
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']) # TODO support more extensions?
 
 logging.basicConfig(level = logging.DEBUG)
 logger = logging.getLogger('TrailServerMain')
@@ -66,6 +66,21 @@ def is_allowed_file(filename):
         filename - name of the transferred file
     """
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def is_matched_date(date, startDate, endDate):
+  '''
+    checks if a date falls within a given interval 
+
+    Arguments:
+      date - the date to be checked
+      startDate - 6 character string in format MMDDYY
+      endDate - 6 character string in format MMDDYY
+  '''
+  if int(date, 10) >= int(startDate, 10) and int(date, 10) <= (endDate, 10):
+    return True
+  
+  return False
+
 
 @app.route("/TrailPiServer/api/check_in", methods=['POST'])
 def api_check_in():
@@ -154,19 +169,47 @@ def api_image_transfer():
 # TODO: find a way to do this with boto3 resource instead of client
 @app.route('/TrailPiServer/api/files', methods=['GET'])
 def get_files(): 
+  '''
+    list all files inside of the S3 bucket
+  '''
     client = boto3.client(
         's3', 
         aws_access_key_id=AWS_ACCESS_KEY, 
         aws_secret_access_key=AWS_SECRET_KEY
     )
-    files = client.list_objects_v2(Bucket='trailpi-images')
+    files = client.list_objects_v2(Bucket=BUCKET_NAME)
 
     filenames = []
     for obj in files['Contents']:
-        filenames.append(obj['Key'])
+      filenames.append(obj['Key'])
 
     response = jsonify({'filenames': filenames})
     return response, 200
 
 if __name__ == '__main__':
     application.run(debug = True)
+
+@app.route('/TrailPiServer/api/filesByDateRange?startDate=<startDate>&endDate=<endDate>', methods=['GET'])
+def get_files_by_date_range(startDate, endDate):
+  ''' 
+    returns all of the images within the interval defined by startDate and endDate
+
+    Arguments: 
+      startDate - 6 character string in MMDDYY format describing the start of the interval
+      endDate - 6 character string in MMDDYY format describing the end of the interval
+  '''
+  client = boto3.client(
+    's3'
+    aws_access_key_id=AWS_ACCESS_KEY 
+    aws_secret_access_key=AWS_SECRET_KEY 
+  )
+  files = client.list_objects_v2(Bucket=BUCKET_NAME)
+
+  filenames = []  
+  for obj in files['Contents']:
+    filename = obj['Key']
+    if is_matched_date(filename[0:5]):
+      filenames.append(filename)
+
+  response = jsonify({'filenames': filenames})
+  return response, 200
