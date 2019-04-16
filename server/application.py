@@ -76,7 +76,7 @@ def is_matched_date(date, startDate, endDate):
       startDate - 6 character string in format MMDDYY
       endDate - 6 character string in format MMDDYY
   '''
-  if int(date, 10) >= int(startDate, 10) and int(date, 10) <= (endDate, 10):
+  if int(date, 10) >= int(startDate, 10) and int(date, 10) <= int(endDate, 10):
     return True
   
   return False
@@ -172,24 +172,24 @@ def get_files():
   '''
     list all files inside of the S3 bucket
   '''
-    client = boto3.client(
-        's3', 
-        aws_access_key_id=AWS_ACCESS_KEY, 
-        aws_secret_access_key=AWS_SECRET_KEY
-    )
-    files = client.list_objects_v2(Bucket=BUCKET_NAME)
+  client = boto3.client(
+      's3', 
+      aws_access_key_id=AWS_ACCESS_KEY, 
+      aws_secret_access_key=AWS_SECRET_KEY
+  )
+  files = client.list_objects_v2(Bucket=BUCKET_NAME)
 
-    filenames = []
-    for obj in files['Contents']:
-      filenames.append(obj['Key'])
+  filenames = []
+  for obj in files['Contents']:
+    filenames.append(obj['Key'])
 
-    response = jsonify({'filenames': filenames})
-    return response, 200
+  response = jsonify({'filenames': filenames})
+  return response, 200
 
 if __name__ == '__main__':
     application.run(debug = True)
 
-@app.route('/TrailPiServer/api/filesByDateRange?startDate=<startDate>&endDate=<endDate>', methods=['GET'])
+@app.route('/TrailPiServer/api/filesByDateRange/<startDate>/<endDate>', methods=['GET'])
 def get_files_by_date_range(startDate, endDate):
   ''' 
     returns all of the images within the interval defined by startDate and endDate
@@ -199,8 +199,8 @@ def get_files_by_date_range(startDate, endDate):
       endDate - 6 character string in MMDDYY format describing the end of the interval
   '''
   client = boto3.client(
-    's3'
-    aws_access_key_id=AWS_ACCESS_KEY 
+    's3',
+    aws_access_key_id=AWS_ACCESS_KEY, 
     aws_secret_access_key=AWS_SECRET_KEY 
   )
   files = client.list_objects_v2(Bucket=BUCKET_NAME)
@@ -208,7 +208,7 @@ def get_files_by_date_range(startDate, endDate):
   filenames = []  
   for obj in files['Contents']:
     filename = obj['Key']
-    if is_matched_date(filename[0:5]):
+    if is_matched_date(filename[0:6], startDate, endDate):
       filenames.append(filename)
 
   response = jsonify({'filenames': filenames})
