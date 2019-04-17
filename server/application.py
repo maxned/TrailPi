@@ -2,6 +2,7 @@ from sys import version_info, exit
 assert (version_info > (3, 6)), "Python 3.7 or later is required."
 import logging
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 #import mysql.connector
 #from mysql.connector import errorcode
 import os
@@ -17,6 +18,7 @@ logging.basicConfig(level = logging.DEBUG)
 logger = logging.getLogger('TrailServerMain')
 
 application = app = Flask(__name__) # needs to be named "application" for elastic beanstalk
+CORS(app)
 app.secret_key = 't_pi!sctkey%20190203#' 
 
 # AWS S3 configuration
