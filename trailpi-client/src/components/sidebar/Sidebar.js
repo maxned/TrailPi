@@ -4,6 +4,8 @@ import './Sidebar.scss';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
+import { Button } from 'reactstrap';
+
 class Sidebar extends React.Component {
   constructor() {
     super();
@@ -25,11 +27,20 @@ class Sidebar extends React.Component {
     this.setState({ endDate: date});
   }
 
-  onDateSubmit() {
+  async onDateSubmit() {
+    let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/filesByDateRange/';
     let requestStartDate = this.buildDateString(this.state.startDate);
     let requestEndDate = this.buildDateString(this.state.endDate);
-    console.log(requestStartDate);
-    console.log(requestEndDate);
+
+    url += requestStartDate + '/' + requestEndDate;
+    let response = await fetch(url);
+    let data = await response.json();
+    
+    let images = [];
+    for (let file of data.filenames) 
+      images.push(file);
+
+    this.setState({ images });
   }
 
   // return a date string of the format: MMDDYY
@@ -53,11 +64,12 @@ class Sidebar extends React.Component {
 
     return dateString;
   }
-  
+
   render() {
     const s3BucketURL = 'https://s3-us-west-2.amazonaws.com/trailpi-images/';
     return (
       <div className='sidebar-wrapper'>
+        <h2>date select</h2>
         <div className='datepicker-wrapper'>
           <DatePicker 
             selected={this.state.startDate}
@@ -72,17 +84,24 @@ class Sidebar extends React.Component {
             startDate={this.state.startDate}
             endDate={this.state.endDate}
             onChange={this.handleChangeEnd}
-          />
+          />        
+          <Button 
+            color='primary'
+            onClick={this.onDateSubmit}
+          >
+            Submit
+          </Button>
         </div>
-        <button onClick={this.onDateSubmit}>Submit</button>
-        {this.state.images.map((imageName, key) => {
-          let imageURL = s3BucketURL + imageName;
-          return (
-            <div key={key} className='image-wrapper'>
-                <img src={imageURL} /> 
-            </div>
-          );
-        })}
+        <div className='image-panel'>
+          {this.state.images.map((imageName, key) => {
+            let imageURL = s3BucketURL + imageName;
+            return (
+              <div key={key} className='image-wrapper'>
+                  <img src={imageURL} /> 
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }
