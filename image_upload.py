@@ -14,6 +14,10 @@ def upload_image(image_name):
     image_data = None
 
     try:
+        # Make sure directory exists
+        if not config["image_folder"] in os.listdir():
+            os.mkdir(config["image_folder"])
+
         image_data = open(image_path, 'rb')
     except:
         if config["debug"]:
@@ -56,6 +60,10 @@ def valid_image(image_name):
 
 # Return a list of image names that should be uploaded right now
 def uploadable_images():
+    # Make sure directory exists before searching it
+    if not config["image_folder"] in os.listdir():
+        os.mkdir(config["image_folder"])
+
     images = os.listdir(config["image_folder"])
     valid_images = [image for image in images if valid_image(image)]
     return valid_images

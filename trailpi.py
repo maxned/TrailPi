@@ -69,6 +69,10 @@ def save_picture(image, timestamp):
 
         # Save image to disk
         try:
+            # Make sure directory exists
+            if not "images" in os.listdir():
+                os.mkdir("images")
+
             with open('{}/{}.jpg'.format(config["image_folder"], timestamp), 'wb') as file:
                 file.write(image_stream.getvalue())
 
