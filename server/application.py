@@ -1,10 +1,8 @@
 from sys import version_info, exit
 assert (version_info > (3, 6)), "Python 3.7 or later is required."
 import logging
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
-#import mysql.connector
-#from mysql.connector import errorcode
 import os
 from werkzeug.utils import secure_filename
 import activity
@@ -215,3 +213,24 @@ def get_files_by_date_range(startDate, endDate):
 
   response = jsonify({'filenames': filenames})
   return response, 200
+
+@app.route('/TrailPiServer/api/downloadFile/<filename>', methods=['GET'])
+def download_file(filename):
+  '''
+    retrieves a file from S3 and returns a Response object with
+    "Content-Disposition: attachment", initiating a download from the user's browser
+
+    Arguments:
+      filename: the name of the file inside of the s3 bucket (filename extension included)
+  '''
+  s3_client = boto3.client(
+    's3',
+    aws_access_key_id=AWS_ACCESS_KEY, 
+    aws_secret_access_key=AWS_SECRET_KEY 
+  )
+  file = s3_client.get_object(Bucket=BUCKET_NAME, Key=filename)
+  return Response (
+    file['Body'].read(),
+    mimetype='text/plain',
+    headers={"Content-Disposition": "attachment; filename={}".format(filename)}
+  )
