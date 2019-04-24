@@ -17,6 +17,7 @@ class Sidebar extends React.Component {
     this.handleChangeStart = this.handleChangeStart.bind(this);
     this.handleChangeEnd = this.handleChangeEnd.bind(this);
     this.onDateSubmit = this.onDateSubmit.bind(this);
+    this.downloadImage = this.downloadImage.bind(this);
   }
 
   async handleChangeStart(date) {
@@ -41,6 +42,13 @@ class Sidebar extends React.Component {
       images.push(file);
 
     this.setState({ images });
+  }
+
+  async downloadImage(imageName) {
+    let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/downloadFile/';
+    
+    url += imageName;
+    window.open(url);
   }
 
   // return a date string of the format: MMDDYY
@@ -98,6 +106,12 @@ class Sidebar extends React.Component {
             return (
               <div key={key} className='image-wrapper'>
                   <img src={imageURL} /> 
+                  <Button
+                    color='primary'
+                    onClick={() => this.downloadImage(imageName)}
+                  >
+                    download
+                  </Button>
               </div>
             );
           })}
