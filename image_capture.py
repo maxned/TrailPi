@@ -13,7 +13,13 @@ import os
 pir = None
 relay = None
 take_picture = False
+capture_enabled = True
 config = json.load(open("trailpi_config.json"))
+
+if config["camera_type"] == "day":
+    capture_enabled = True
+else:
+    capture_enabled = False
 
 # From the Python Cookbook
 # Default list is populated with tuples of (None, None)
@@ -104,6 +110,9 @@ def begin_image_capture():
     # Do not save the thumbnail to keep the file size smaller
     for capture in camera.capture_continuous(stream, format='jpeg', quality=config["quality"], thumbnail=None):
 
+        if config["debug"]:
+            print("image captured")
+
         # Timestamp the image
         timestamp = datetime.now().strftime(config["image_timestamp_format"])
 
@@ -132,11 +141,27 @@ def begin_image_capture():
             # Save as tuple together with the timestamp
             image_buffer.append((stream.getvalue(), timestamp))
 
+        # Reset the stream to capture a new image
         stream.seek(0)
         stream.truncate()
 
-        if config["debug"]:
-            print("image captured")
+        # If capture is disabled, stop taking pictures and suspend the whole script
+        if not capture_enabled:
+            signal.pause()
+
+def enable_capture(signum, frame):
+    if config["debug"]:
+        print("capture enabled")
+
+    global capture_enabled
+    capture_enabled = True
+
+def disable_capture(signum, frame):
+    if config["debug"]:
+        print("capture disabled")
+
+    global capture_enabled
+    capture_enabled = False
 
 if __name__== "__main__":
     if config["debug"]:
@@ -149,9 +174,13 @@ if __name__== "__main__":
     # Setup relay i2c communication on i2c bus 1 (default)
     relay = smbus.SMBus(1)
 
-    # Manually trigger a take_picture event
+    # Manually trigger a take_picture event (only for debug)
     if config["debug"]:
         signal.signal(signal.SIGINT, take_picture)
+
+    # Sign up for signals to control whether capture should be enabled or disabled
+    signal.signal(signal.SIGUSR1, enable_capture)
+    signal.signal(signal.SIGUSR2, disable_capture)
 
     # Keep taking pictures but save them only when needed
     begin_image_capture()

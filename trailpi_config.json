@@ -1,5 +1,6 @@
 {
     "site_number": 15,
+    "camera_type": "day",
     "resolution": [3280, 2464],
     "quality": 10,
     "capture_chunk_size": 5,
