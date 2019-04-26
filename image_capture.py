@@ -56,21 +56,13 @@ def set_ir_led_state(state):
 
 def save_picture(image, timestamp):
     if image:
-        # Change the EXIF data of the image to encode the site number
-        image_stream = io.BytesIO()
-        image_exif = piexif.load(image)
-        image_exif["Exif"][piexif.ExifIFD.SubjectDistanceRange] = config["site_number"]
-        image_exif = piexif.dump(image_exif)
-        piexif.insert(image_exif, image, image_stream)
-
-        # Save image to disk
         try:
             # Make sure directory exists
             if not "images" in os.listdir():
                 os.mkdir("images")
 
             with open('{}/{}.jpg'.format(config["image_folder"], timestamp), 'wb') as file:
-                file.write(image_stream.getvalue())
+                file.write(image)
 
                 # Make sure file is saved to disk so it can be uploaded
                 file.flush()
@@ -84,6 +76,8 @@ def save_picture(image, timestamp):
 
 def begin_image_capture():
     camera = PiCamera(resolution=tuple(config["resolution"]))
+    # Encode the site number into the exif field of the image just in case
+    camera.exif_tags["EXIF.SubjectDistanceRange"] = str(config["site_number"])
     time.sleep(2) # Give camera time to wake up
 
     # Goal is keep capturing images and saving images to a buffer
