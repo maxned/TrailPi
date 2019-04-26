@@ -2,6 +2,7 @@
 from picamera import PiCamera
 from gpiozero import MotionSensor
 from datetime import datetime
+from helpers import get_pid, RingBuffer
 import json
 import smbus
 import time
@@ -16,32 +17,21 @@ take_picture = False
 capture_enabled = True
 config = json.load(open("trailpi_config.json"))
 
+# Default value for whether image capture should be enabled depending
+# on camera_type day or night
 if config["camera_type"] == "day":
     capture_enabled = True
 else:
     capture_enabled = False
 
-# From the Python Cookbook
-# Default list is populated with tuples of (None, None)
-class RingBuffer:
-    def __init__(self, size_max):
-        self.max = size_max
-        self.current = 0
-        self.clear()
+def switch_to_other_camera():
+    pid = get_pid("trailpi")
+    if pid == 0: # trailpi isn't running for some reason
+        return
 
-    # Append an element overwriting the oldest one
-    def append(self, x):
-        self.data[self.current] = x
-        self.current = (self.current + 1) % self.max
-
-    # Return elements from oldest to newest
-    def get(self):
-        return self.data[self.current:] + self.data[:self.current]
-
-    def clear(self):
-        self.data = [(None, None) for i in range(self.max)]
-
-# TrailPi Logic
+    # Signal to trailpi.py that the night camera should be enabled and self
+    # should be disabled
+    os.kill(pid, signal.SIGUSR1)
 
 def take_picture(signum, frame):
     if config["debug"]:

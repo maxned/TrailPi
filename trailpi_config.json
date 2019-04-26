@@ -4,10 +4,13 @@
     "resolution": [3280, 2464],
     "quality": 10,
     "capture_chunk_size": 5,
-    "pir_gpio_pin": 18,
-    "image_timestamp_format": "%m:%d:%y-%H:%M:%S:%f",
+
+    "pir_gpio_pin": "BOARD12",
+    "pi2_input_pin": "BOARD38",
+    "pi2_output_pin": "BOARD40",
 
     "debug": true,
+    "image_timestamp_format": "%m:%d:%y-%H:%M:%S:%f",
 
     "image_folder": "images",
     "image_upload_url": "http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/image_transfer",
