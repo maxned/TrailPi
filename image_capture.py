@@ -25,6 +25,9 @@ else:
     capture_enabled = False
 
 def switch_to_other_camera():
+    if config["debug"]:
+        print("switching to other camera")
+
     pid = get_pid("trailpi")
     if pid == 0: # trailpi isn't running for some reason
         return
@@ -96,6 +99,8 @@ def begin_image_capture():
 
         if config["debug"]:
             print("image captured")
+            print("analog_gain: " + str(float(camera.analog_gain)))
+            print("digital_gain: " + str(float(camera.digital_gain)))
 
         # Timestamp the image
         timestamp = datetime.now().strftime(config["image_timestamp_format"])
@@ -128,6 +133,19 @@ def begin_image_capture():
         # Reset the stream to capture a new image
         stream.seek(0)
         stream.truncate()
+
+        # Switch to the other camera based on the specified threshold
+        if config["camera_type"] == "day" and capture_enabled and \
+                camera.analog_gain > config["day_to_night_threshold"]:
+            switch_to_other_camera()
+        elif config["camera_type"] == "night" and capture_enabled and \
+                camera.analog_gain < config["night_to_day_threshold"]:
+            switch_to_other_camera()
+
+        # Sleep between images (needed to allow auto exposure to work)
+        # Values of at least 0.1 will allow camera to expose within 10 seconds
+        # Higher values will allow for faster exposure
+        time.sleep(config["inter_capture_delay"])
 
         # If capture is disabled, stop taking pictures and suspend the whole script
         if not capture_enabled:

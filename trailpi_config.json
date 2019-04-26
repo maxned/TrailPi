@@ -1,9 +1,13 @@
 {
     "site_number": 15,
-    "camera_type": "day",
     "resolution": [3280, 2464],
+    "inter_capture_delay": 0.25,
     "quality": 10,
     "capture_chunk_size": 5,
+
+    "camera_type": "day",
+    "day_to_night_threshold": 7,
+    "night_to_day_threshold": 6,
 
     "pir_gpio_pin": "BOARD12",
     "pi2_input_pin": "BOARD38",
