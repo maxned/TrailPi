@@ -9,7 +9,8 @@
     "day_to_night_threshold": 7,
     "night_to_day_threshold": 6,
 
-    "pir_gpio_pin": "BOARD12",
+    "pir_input_pin": "BOARD12",
+    "pir_output_pin": "BOARD11",
     "pi2_input_pin": "BOARD38",
     "pi2_output_pin": "BOARD40",
 

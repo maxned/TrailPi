@@ -1,6 +1,6 @@
 
 from picamera import PiCamera
-from gpiozero import MotionSensor
+from gpiozero import MotionSensor, DigitalOutputDevice
 from datetime import datetime
 from helpers import get_pid, RingBuffer
 import json
@@ -11,7 +11,8 @@ import io
 import piexif
 import os
 
-pir = None
+pir_output = None
+pir_input = None
 relay = None
 take_picture = False
 capture_enabled = True
@@ -45,10 +46,14 @@ def take_picture(signum, frame):
 
 def motion_detected():
     if config["debug"]:
-        print("motion detected")
+        print("motion detected: {}".format(pir_input.value))
 
-    global take_picture
-    take_picture = True
+    # Mirror the output of the PIR sensor for the other Pi
+    pir_output.value = pir_input.value
+
+    if pir_input.value and capture_enabled:
+        global take_picture
+        take_picture = True
 
 def set_ir_led_state(state):
     global relay
@@ -148,7 +153,7 @@ def begin_image_capture():
         time.sleep(config["inter_capture_delay"])
 
         # If capture is disabled, stop taking pictures and suspend the whole script
-        if not capture_enabled:
+        while not capture_enabled:
             signal.pause()
 
 def enable_capture(signum, frame):
@@ -169,9 +174,13 @@ if __name__== "__main__":
     if config["debug"]:
         print("starting")
 
+    # PIR output that mirrors PIR input for use by the other Pi
+    pir_output = DigitalOutputDevice(config["pir_output_pin"])
+
     # PIR connected to GPIO pin
-    pir = MotionSensor(config["pir_gpio_pin"])
-    pir.when_motion = motion_detected
+    pir_input = MotionSensor(config["pir_input_pin"])
+    pir_input.when_motion = motion_detected
+    pir_input.when_no_motion = motion_detected
 
     # Setup relay i2c communication on i2c bus 1 (default)
     relay = smbus.SMBus(1)
