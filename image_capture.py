@@ -28,7 +28,7 @@ def switch_to_other_camera():
     if config["debug"]:
         print("switching to other camera")
 
-    pid = get_pid("trailpi")
+    pid = get_pid("trailpi.py")
     if pid == 0: # trailpi isn't running for some reason
         return
 
