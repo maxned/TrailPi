@@ -2,7 +2,7 @@
 from picamera import PiCamera
 from gpiozero import MotionSensor, DigitalOutputDevice
 from datetime import datetime
-from helpers import get_pid, RingBuffer
+import helpers
 import json
 import smbus
 import time
@@ -11,42 +11,34 @@ import io
 import piexif
 import os
 
+# Global variables set in main
+log = None
+config = None
 pir_output = None
 pir_input = None
 relay = None
 take_picture = False
-capture_enabled = True
-config = json.load(open("trailpi_config.json"))
-
-# Default value for whether image capture should be enabled depending
-# on camera_type day or night
-if config["camera_type"] == "day":
-    capture_enabled = True
-else:
-    capture_enabled = False
-
-def switch_to_other_camera():
-    if config["debug"]:
-        print("switching to other camera")
-
-    pid = get_pid("trailpi.py")
-    if pid == 0: # trailpi isn't running for some reason
-        return
-
-    # Signal to trailpi.py that the night camera should be enabled and self
-    # should be disabled
-    os.kill(pid, signal.SIGUSR1)
 
 def take_picture(signum, frame):
-    if config["debug"]:
-        print("take picture signal")
+    log.debug("Signal take picture")
 
     global take_picture
     take_picture = True
 
+def enable_capture(signum, frame):
+    log.info("Signal capture enabled")
+
+    global capture_enabled
+    capture_enabled = True
+
+def disable_capture(signum, frame):
+    log.info("Signal capture disabled")
+
+    global capture_enabled
+    capture_enabled = False
+
 def motion_detected():
-    if config["debug"]:
-        print("motion detected: {}".format(pir_input.value))
+    log.info("motion detected: {}".format(pir_input.value))
 
     # Mirror the output of the PIR sensor for the other Pi
     pir_output.value = pir_input.value
@@ -54,6 +46,18 @@ def motion_detected():
     if pir_input.value and capture_enabled:
         global take_picture
         take_picture = True
+
+def switch_to_other_camera():
+    log.info("Switch to other camera")
+
+    pid = helpers.get_pid("trailpi.py")
+    if pid == 0: # trailpi isn't running for some reason
+        log.warning("trailpi.py PID not found")
+        return
+
+    # Signal to trailpi.py that the night camera should be enabled and self
+    # should be disabled
+    os.kill(pid, signal.SIGUSR1)
 
 def set_ir_led_state(state):
     global relay
@@ -76,11 +80,9 @@ def save_picture(image, timestamp):
                 file.flush()
                 os.fsync(file.fileno())
 
-                if config["debug"]:
-                    print("Saved image: {}.jpg".format(timestamp))
+                log.info("Saved image: {}.jpg".format(timestamp))
         except:
-            if config["debug"]:
-                print("Failed saving image to disk: {}".format(timestamp))
+            log.error("Failed saving image to disk: {}".format(timestamp))
 
 def begin_image_capture():
     camera = PiCamera(resolution=tuple(config["resolution"]))
@@ -94,18 +96,18 @@ def begin_image_capture():
 
     # Images to save before and after take_picture event
     buffer_size = int(config["capture_chunk_size"] / 2)
-    image_buffer = RingBuffer(buffer_size)
+    image_buffer = helpers.RingBuffer(buffer_size)
     left_to_save = 0
 
     stream = io.BytesIO()
     # Quality is not in percentage, it is logarithmic
     # Do not save the thumbnail to keep the file size smaller
-    for capture in camera.capture_continuous(stream, format='jpeg', quality=config["quality"], thumbnail=None):
+    for capture in camera.capture_continuous(stream, format='jpeg',
+                                            quality=config["quality"], thumbnail=None):
 
-        if config["debug"]:
-            print("image captured")
-            print("analog_gain: " + str(float(camera.analog_gain)))
-            print("digital_gain: " + str(float(camera.digital_gain)))
+        log.info("Image captured")
+        log.info("Analog_gain: " + str(float(camera.analog_gain)))
+        log.info("Digital_gain: " + str(float(camera.digital_gain)))
 
         # Timestamp the image
         timestamp = datetime.now().strftime(config["image_timestamp_format"])
@@ -156,23 +158,18 @@ def begin_image_capture():
         while not capture_enabled:
             signal.pause()
 
-def enable_capture(signum, frame):
-    if config["debug"]:
-        print("capture enabled")
-
-    global capture_enabled
-    capture_enabled = True
-
-def disable_capture(signum, frame):
-    if config["debug"]:
-        print("capture disabled")
-
-    global capture_enabled
-    capture_enabled = False
-
 if __name__== "__main__":
-    if config["debug"]:
-        print("starting")
+    log = helpers.setup_logger(os.path.basename(__file__))
+    log.info("Starting execution")
+
+    config = json.load(open("trailpi_config.json"))
+
+    # Default value for whether image capture should be enabled on start
+    # depending on camera_type (day or night)
+    if config["camera_type"] == "day":
+        capture_enabled = True
+    else:
+        capture_enabled = False
 
     # PIR output that mirrors PIR input for use by the other Pi
     pir_output = DigitalOutputDevice(config["pir_output_pin"])

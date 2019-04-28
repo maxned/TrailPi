@@ -2,27 +2,25 @@
 import time
 import requests
 import json
+import helpers
+import os
+
+log = helpers.setup_logger(os.path.basename(__file__))
+log.info("Starting execution")
 
 config = json.load(open("trailpi_config.json"))
 
-def check_in():
-    site_data = { "site" : config["site_number"] }
-    headers = { "Content-Type" : "application/json" }
+site_data = { "site" : config["site_number"] }
+headers = { "Content-Type" : "application/json" }
 
+while True:
     try:
         response = requests.post(config["check_in_url"], data=json.dumps(site_data), headers=headers)
     except:
-        if config["debug"]:
-            print("POST request failed")
+        log.error("POST request failed")
     else:
-        if config["debug"]:
-            print(response.status_code)
-            print(response.content)
+        log.info(response.status_code)
+        log.info(response.content)
 
-if __name__== "__main__":
-
-    while True:
-        check_in()
-
-        # Check in every so often
-        time.sleep(config["check_in_interval_sec"])
+    # Check in every so often
+    time.sleep(config["check_in_interval_sec"])

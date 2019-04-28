@@ -1,5 +1,9 @@
 
 import subprocess
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+import sys
 
 # From the Python Cookbook
 # Default list is populated with tuples of (None, None) as specified
@@ -35,3 +39,30 @@ def get_pid(name):
         return int(output)
     else:
         return 0
+
+# Setup and return the log object to use for logging information
+def setup_logger(name):
+    # Make sure directory for logs exists
+    if not "logs" in os.listdir():
+        os.mkdir("logs")
+
+    log_format = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s')
+
+    # Save the log to a log file that grows up to 5 MB and saves up to 10 extra
+    # logs before starting to overwrite them
+    rotating_handler = logging.handlers.RotatingFileHandler(
+                            "logs/{}.log".format(name),
+                            maxBytes=5 * 1024 * 1024,
+                            backupCount=10)
+    rotating_handler.setFormatter(log_format)
+
+    # Output the logging onto STDOUT
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(log_format)
+
+    log = logging.getLogger('root')
+    log.setLevel(logging.DEBUG)
+    log.addHandler(rotating_handler)
+    log.addHandler(stream_handler)
+
+    return log

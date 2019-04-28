@@ -4,15 +4,18 @@ import signal
 import time
 import gpiozero
 import json
-from helpers import get_pid
+import helpers
 
-config = json.load(open("trailpi_config.json"))
+# Global variables set in main
+log = None
+config = None
 input_pin = None
 output_pin = None
 
 def start_image_capture():
-    pid = get_pid("image_capture")
+    pid = helpers.get_pid("image_capture.py")
     if pid == 0: # image_capture isn't running for some reason
+        log.warning("image_capture.py PID not found")
         return
 
     # Start self image capture
@@ -22,12 +25,12 @@ def start_image_capture():
     # Tell other Pi to stop image capture
     output_pin.off()
 
-    if config["debug"]:
-        print("start image capture")
+    log.info("Start image capture")
 
 def stop_image_capture():
-    pid = get_pid("image_capture")
+    pid = helpers.get_pid("image_capture.py")
     if pid == 0: # image_capture isn't running for some reason
+        log.warning("image_capture.py PID not found")
         return
 
     # Stop self image capture
@@ -37,13 +40,16 @@ def stop_image_capture():
     # Tell other Pi to start image capture
     output_pin.on()
 
-    if config["debug"]:
-        print("stop image capture")
+    log.info("Stop image capture")
 
 def sig_stop_image_capture(signum, frame):
     stop_image_capture()
 
 if __name__== "__main__":
+    log = helpers.setup_logger(os.path.basename(__file__))
+    log.info("Starting execution")
+
+    config = json.load(open("trailpi_config.json"))
 
     # For the day camera we want to prefer starting capture
     # For the night camera, prefer not capturing by default

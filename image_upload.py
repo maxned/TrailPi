@@ -4,8 +4,11 @@ import os
 import time
 import requests
 import json
+import helpers
 
-config = json.load(open("trailpi_config.json"))
+# Global variables set in main
+log = None
+config = None
 
 def upload_image(image_name):
     image_path = "{}/{}".format(config["image_folder"], image_name) # Add the directory
@@ -20,9 +23,7 @@ def upload_image(image_name):
 
         image_data = open(image_path, 'rb')
     except:
-        if config["debug"]:
-            print("Image cannot be opened: {}".format(image_path))
-
+        log.error("Image cannot be opened: {}".format(image_path))
         return requests.models.Response()
 
     files = [
@@ -33,14 +34,12 @@ def upload_image(image_name):
     try:
         response = requests.post(config["image_upload_url"], files=files)
     except:
-        if config["debug"]:
-            print("POST request failed")
-
+        log.error("POST request failed for image: {}".format(image_name))
         return requests.models.Response()
 
-    if config["debug"]:
-        print(response.status_code)
-        print(response.content)
+    log.info("Uploaded image: {}".format(image_name))
+    log.info(response.status_code)
+    log.info(response.content)
 
     return response
 
@@ -69,14 +68,22 @@ def uploadable_images():
     return valid_images
 
 if __name__== "__main__":
+    log = helpers.setup_logger(os.path.basename(__file__))
+    log.info("Starting execution")
+
+    config = json.load(open("trailpi_config.json"))
 
     while True:
-        for image in uploadable_images():
-            response = upload_image(image)
+        for image_name in uploadable_images():
+            response = upload_image(image_name)
 
             # Delete image if successfully uploaded
             if response.status_code == 200:
-                os.remove("{}/{}".format(config["image_folder"], image))
+                try:
+                    os.remove("{}/{}".format(config["image_folder"], image_name))
+                    log.info("Removed image: {}".format(image_name))
+                except:
+                    log.error("Could not remove image: {}".format(image_name))
 
         # Check every 5 seconds
         time.sleep(config["image_upload_check_interval_sec"])
