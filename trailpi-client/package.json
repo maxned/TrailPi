@@ -3,17 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "bootstrap": "^4.3.1",
     "leaflet": "^1.4.0",
+    "node-sass": "^4.11.0",
     "react": "^16.8.4",
+    "react-datepicker": "^2.4.0",
     "react-dom": "^16.8.4",
     "react-leaflet": "^2.2.1",
-    "react-scripts": "2.1.8"
+    "react-scripts": "2.1.8",
+    "reactstrap": "^8.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "aws s3 sync build/ s3://trailpi-client"
   },
   "eslintConfig": {
     "extends": "react-app"

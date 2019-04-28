@@ -1,0 +1,12 @@
+.wrapper {
+  display: flex;
+  flex-direction: row;
+
+  .sidebar-wrapper {
+    flex: 20%;
+  }
+
+  .map-wrapper {
+    flex: 80%;
+  }
+}
