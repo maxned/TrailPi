@@ -4,8 +4,7 @@ import logging
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from application import db
-from application.models import Pictures
+from sqlalchemy.dialects.mysql import INTEGER, TINYINT
 import os
 from werkzeug.utils import secure_filename
 import activity
@@ -22,6 +21,11 @@ logger = logging.getLogger('TrailServerMain')
 application = app = Flask(__name__) # needs to be named "application" for elastic beanstalk
 CORS(app)
 app.secret_key = 't_pi!sctkey%20190203#'
+
+# MySQL database initialization
+application.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:ECS193dev!@trailpi-db-instance.ckdc802eljqg.us-west-1.rds.amazonaws.com:3306/ReserveWebcamImages'
+application.config['SQLALCHEMY_POOL_RECYCLE'] = 3600
+db = SQLAlchemy(application)
 
 # AWS S3 configuration
 BUCKET_NAME = os.environ.get('BUCKET')
@@ -141,10 +145,10 @@ def api_image_transfer():
 
         # url format from https://forums.aws.amazon.com/thread.jspa?threadID=93828
         # TODO: check the url is correct, and better way for date?
-        new_data = Pictures(site=data.site, date=datetime.datetime.utcnow, url=f'https://s3.amazon.com/{BUCKET}/{filename}')
+        new_data = Pictures(site=data['site'], date=datetime.datetime.utcnow, url=f'https://s3.amazon.com/{BUCKET_NAME}/{filename}')
 
         try:
-            db.session.add(new_date)
+            db.session.add(new_data)
             db.session.commit()
             db.session.close()
         except:
@@ -177,9 +181,6 @@ def get_files():
 
   response = jsonify({'filenames': filenames})
   return response, 200
-
-if __name__ == '__main__':
-    application.run(debug = True)
 
 @app.route('/TrailPiServer/api/filesByDateRange/<startDate>/<endDate>', methods=['GET'])
 def get_files_by_date_range(startDate, endDate):
@@ -226,3 +227,45 @@ def download_file(filename):
     mimetype='text/plain',
     headers={"Content-Disposition": "attachment; filename={}".format(filename)}
   )
+
+  from sqlalchemy.dialects.mysql import INTEGER, TINYINT
+
+# SQL Models
+# TODO -> move these to another file. This is just for an elastic beanstalk test
+
+class Pictures(db.Model):
+  """Represents an entry for the Pictures table
+  """
+  __tablename__ = 'Pictures'
+
+  pic_id = db.Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+  site = db.Column(TINYINT(display_width=2, unsigned=True), nullable=False)
+  date = db.Column(db.DateTime, nullable=False)
+  url = db.Column(db.String(200), nullable=False)
+  tags = db.relationship('Tags', backref='picture', lazy=True)
+
+  def __init__(self, site, date, url):
+    self.site = site
+    self.date = date
+    self.url = url
+
+  def __repr__(self):
+    return '<Picture(%r, %r, %r)>' % self.site, self.date, self.url
+
+class Tags(db.Model):
+  """Represents an entry for the Tags table
+  """
+  __tablename__ = 'Tags'
+
+  pic_id = db.Column(INTEGER(unsigned=True), db.ForeignKey('Pictures.pic_id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
+  tag = db.Column(db.String(length=20), primary_key=True)
+
+  def __init__(self, pic_id, tag):
+    self.pic_id = pic_id
+    self.tag = tag
+
+  def __repr__(self):
+    return '<Tag(%r, %r)>' % self.id, self.tag
+
+if __name__ == '__main__':
+  application.run(debug = True)
