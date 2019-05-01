@@ -15,7 +15,7 @@ class classifier:
         # compile the model
         self.model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
                             metrics = ['accuracy'])
-                            print('Compiled model successfully')
+        print('Compiled model successfully')
     
     def convert_to_array(self, image):
         image = cv2.imread(image)
@@ -32,7 +32,7 @@ class classifier:
     
     def predict_animal(self, file):
         print("Predicting .................................")
-        ar = convert_to_array(file)
+        ar = self.convert_to_array(file)
         ar = ar/255
         label = 1
         a = []
