@@ -1,5 +1,6 @@
 import sys
-from classifier import *
+from PIL import Image
+from classifier import Classifier
 
 file_name = sys.argv[1]
 im = Image.open(file_name)
