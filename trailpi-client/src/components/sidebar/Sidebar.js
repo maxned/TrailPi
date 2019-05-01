@@ -55,10 +55,10 @@ class Sidebar extends React.Component {
             onChange={this.handleChangeEnd}
           />        
         </div>
-        <div className='camera-select'>
+        <div className='site-select'>
           <Select 
             isMulti 
-            name='cameras'
+            name='sites'
             options={selectOptions}
             onChange={this.handleCameraSelect}
             className='basic-multi-select'
@@ -71,7 +71,7 @@ class Sidebar extends React.Component {
             state: {
               startDate: this.state.startDate,
               endDate: this.state.endDate,
-              cameras: this.state.selectedOptions 
+              sites: this.state.selectedOptions 
             } 
           }}>
             <Button

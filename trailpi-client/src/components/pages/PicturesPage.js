@@ -1,4 +1,5 @@
 import React from 'react';
+import './PicturesPage.scss';
 
 import { Button } from 'reactstrap';
 
@@ -13,19 +14,28 @@ class PicturesPage extends React.Component {
   }
 
   componentDidMount() {
+    console.log(this.props.location.state.sites);
     this.getImages({
       startDate: this.props.location.state.startDate,
       endDate: this.props.location.state.endDate,
-      cameras: this.props.location.state.cameras
+      sites: this.props.location.state.sites
     });
   }
 
   async getImages(options) {
-    let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/filesByDateRange/';
+    let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/images/';
     let requestStartDate = this.buildDateString(options.startDate);
     let requestEndDate = this.buildDateString(options.endDate);
 
-    url += requestStartDate + '/' + requestEndDate;
+    url += `${requestStartDate}/${requestEndDate}`;
+    if (options.sites.length > 0)
+      url += '/';
+
+    for (let site of options.sites) 
+      url += `${site.value}+`;
+
+    url = url.slice(0, -1);  
+
     let response = await fetch(url);
     let data = await response.json();
 
@@ -75,12 +85,16 @@ class PicturesPage extends React.Component {
             return (
               <div key={key} className='image-wrapper'>
                 <img src={imageURL} />
-                <Button
-                  color='primary'
-                  onClick={() => this.downloadImage(imageName)}
-                >
-                  download
+                <div className='control-panel'>
+                  <h6>{imageName.slice(0, 5)}</h6>
+                  <Button
+                    color='primary'
+                    onClick={() => this.downloadImage(imageName)}
+                    size='sm'
+                  >
+                    download
                   </Button>
+                </div>
               </div>
             );
           })}
