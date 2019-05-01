@@ -14,7 +14,7 @@ class ReserveMap extends React.Component {
         />
         {mapMarkers.map((marker, key) => {
           return (
-            <Marker position={marker.position}>
+            <Marker position={marker.position} key={key}>
               <Popup>
                 <b>{marker.name}</b>
               </Popup>
