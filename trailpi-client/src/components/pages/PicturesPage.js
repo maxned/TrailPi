@@ -1,19 +1,29 @@
 import React from 'react';
 
-class Pictures extends React.Component {
+import { Button } from 'reactstrap';
+
+
+class PicturesPage extends React.Component {
   constructor() {
     super();
+    this.state = {
+      images: []
+    };
     this.downloadImage = this.downloadImage.bind(this);
   }
 
   componentDidMount() {
-
+    this.getImages({
+      startDate: this.props.location.state.startDate,
+      endDate: this.props.location.state.endDate,
+      cameras: this.props.location.state.cameras
+    });
   }
 
-  async onDateSubmit() {
+  async getImages(options) {
     let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/filesByDateRange/';
-    let requestStartDate = this.buildDateString(this.state.startDate);
-    let requestEndDate = this.buildDateString(this.state.endDate);
+    let requestStartDate = this.buildDateString(options.startDate);
+    let requestEndDate = this.buildDateString(options.endDate);
 
     url += requestStartDate + '/' + requestEndDate;
     let response = await fetch(url);
@@ -58,7 +68,7 @@ class Pictures extends React.Component {
   render() {
     const s3BucketURL = 'https://s3-us-west-2.amazonaws.com/trailpi-images/';
     return (
-      <div>
+      <div className='picturesPage-wrapper'>
         <div className='image-panel'>
           {this.state.images.map((imageName, key) => {
             let imageURL = s3BucketURL + imageName;
@@ -80,4 +90,4 @@ class Pictures extends React.Component {
   }
 };
 
-export default Pictures;
+export default PicturesPage;

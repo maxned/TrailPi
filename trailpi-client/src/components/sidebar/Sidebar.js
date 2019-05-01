@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Sidebar.scss';
 
 import DatePicker from 'react-datepicker';
@@ -20,7 +21,6 @@ class Sidebar extends React.Component {
     this.handleChangeStart = this.handleChangeStart.bind(this);
     this.handleChangeEnd = this.handleChangeEnd.bind(this);
     this.handleCameraSelect = this.handleCameraSelect.bind(this);
-    this.onDateSubmit = this.onDateSubmit.bind(this);
   }
 
   handleChangeStart(date) {
@@ -33,13 +33,6 @@ class Sidebar extends React.Component {
 
   handleCameraSelect(selectedOptions) {
     this.setState({ selectedOptions });
-  }
-
-  async onDateSubmit() {
-    // Transition to next page
-    console.log(this.state.startDate);
-    console.log(this.state.endDate);
-    console.log(this.state.selectedOptions);
   }
 
   render() {
@@ -73,12 +66,20 @@ class Sidebar extends React.Component {
           />
         </div>
         <div className='submit-wrapper'>
-          <Button
-            color='primary'
-            onClick={this.onDateSubmit}
-          >
-            Submit
-          </Button>        
+          <Link to={{ 
+            pathname: '/pictures', 
+            state: {
+              startDate: this.state.startDate,
+              endDate: this.state.endDate,
+              cameras: this.state.selectedOptions 
+            } 
+          }}>
+            <Button
+              color='primary'
+            >
+              Submit
+            </Button>                  
+          </Link>
         </div>
       </div>
     );
