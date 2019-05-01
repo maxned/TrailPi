@@ -11,7 +11,7 @@ from keras.layers import Conv2D,MaxPooling2D,Dense,Flatten,Dropout
 #create a cropper
 def crop_image(img):
     w, h = img.size
-    #croping 30 pixes frpm the bottom and 70 pixels from the top
+    #croping 30 pixes from the bottom and 70 pixels from the top
     #in order to remove the labels that the trail pictures came with
     return img.crop((0, 30, w, h-70)) 
 
