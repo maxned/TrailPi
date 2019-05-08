@@ -18,8 +18,8 @@ class Classifier:
         self.model.load_weights(weights_file)
         print('Loaded Model From Disk successfully')
         # compile the model
-        self.model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
-                            metrics = ['accuracy'])
+        #self.model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
+        #                    metrics = ['accuracy'])
         print('Compiled model successfully')
     
     def convert_to_array(self, image):
