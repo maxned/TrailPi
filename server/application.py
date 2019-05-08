@@ -23,9 +23,14 @@ CORS(app)
 app.secret_key = 't_pi!sctkey%20190203#'
 
 # MySQL database initialization
-application.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:ECS193dev!@trailpi-db-instance.ckdc802eljqg.us-west-1.rds.amazonaws.com:3306/ReserveWebcamImages'
-application.config['SQLALCHEMY_POOL_RECYCLE'] = 3600
-db = SQLAlchemy(application)
+username = os.environ.get('RDS_USERNAME')
+password = os.environ.get('RDS_PASSWORD')
+endpoint = os.environ.get('RDS_ENDPOINT')
+instance = os.environ.get('RDS_INSTANCE')
+database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+app.config['SQLALCHEMY_POOL_RECYCLE'] = 3600
+db = SQLAlchemy(app)
 
 # AWS S3 configuration
 BUCKET_NAME = os.environ.get('BUCKET')
@@ -36,7 +41,6 @@ s3 = boto3.resource(
     aws_access_key_id=AWS_ACCESS_KEY,
     aws_secret_access_key=AWS_SECRET_KEY)
 bucket = s3.Bucket(BUCKET_NAME)
-
 
 def is_allowed_site(site):
     """Returns whether passed site is valid
@@ -268,4 +272,5 @@ class Tags(db.Model):
     return '<Tag(%r, %r)>' % self.id, self.tag
 
 if __name__ == '__main__':
+  db.create_all()
   application.run(debug = True)
