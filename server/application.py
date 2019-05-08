@@ -1,10 +1,11 @@
 from sys import version_info, exit
-assert (version_info > (3, 6)), "Python 3.7 or later is required."
+assert (version_info > (3, 6)), "Python 3.6 or later is required."
 import logging
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.mysql import INTEGER, TINYINT
+from utils import ListConverter
 import os
 from werkzeug.utils import secure_filename
 import activity
@@ -30,11 +31,14 @@ instance = os.environ.get('RDS_INSTANCE')
 database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 db = SQLAlchemy(app)
+app.url_map.converters['list'] = ListConverter
+app.secret_key = 't_pi!sctkey%20190203#' 
 
 # AWS S3 configuration
 BUCKET_NAME = os.environ.get('BUCKET')
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
+
 s3 = boto3.resource(
     's3',
     aws_access_key_id=AWS_ACCESS_KEY,
@@ -78,7 +82,6 @@ def is_matched_date(date, startDate, endDate):
     return True
 
   return False
-
 
 @app.route("/TrailPiServer/api/check_in", methods=['POST'])
 def api_check_in():
@@ -185,14 +188,15 @@ def get_files():
   response = jsonify({'filenames': filenames})
   return response, 200
 
-@app.route('/TrailPiServer/api/filesByDateRange/<startDate>/<endDate>', methods=['GET'])
-def get_files_by_date_range(startDate, endDate):
-  '''
+@app.route('/TrailPiServer/api/images/<startDate>/<endDate>/<list:requested_sites>', methods=['GET'])
+def get_image_urls(startDate, endDate, requested_sites):
+  ''' 
     returns all of the images within the interval defined by startDate and endDate
 
     Arguments:
       startDate - 6 character string in MMDDYY format describing the start of the interval
       endDate - 6 character string in MMDDYY format describing the end of the interval
+      requested_sites - list of sites in request
   '''
   client = boto3.client(
     's3',
@@ -201,10 +205,14 @@ def get_files_by_date_range(startDate, endDate):
   )
   files = client.list_objects_v2(Bucket=BUCKET_NAME)
 
-  filenames = []
-  for obj in files['Contents']:
+  filenames = []  
+  
+  # filter images based on date and camera selection
+  for obj in files['Contents']: 
     filename = obj['Key']
-    if is_matched_date(filename[0:6], startDate, endDate):
+    file_site = filename[0:5]
+    file_date = filename[6:12]
+    if is_matched_date(file_date, startDate, endDate) and file_site in requested_sites:
       filenames.append(filename)
 
   response = jsonify({'filenames': filenames})

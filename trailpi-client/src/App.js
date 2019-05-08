@@ -1,19 +1,21 @@
 import React from 'react';
-import './App.scss';
-
-import ReserveMap from './components/map/ReserveMap';
-import Sidebar from './components/sidebar/Sidebar';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { routes } from './components/common/routeConfig';
 
 class App extends React.Component {
   render() {
     return (
-      <div className='wrapper'>
-        <div className='sidebar-wrapper'>
-          <Sidebar />
-        </div>
-        <div className='map-wrapper'>
-          <ReserveMap />
-        </div>      
+      <div className='App'>
+        <Router>
+          {routes.map((route, index) => (
+            <Route 
+              key={index}
+              path={route.path}
+              exact={route.exact}
+              component={route.component}
+            />
+          ))}
+        </Router>
       </div>
     );
   }

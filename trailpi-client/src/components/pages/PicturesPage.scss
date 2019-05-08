@@ -1,0 +1,29 @@
+.picturesPage-wrapper {
+
+  .image-panel {
+    margin-top: 20px;
+    height: 100%;
+
+    .image-wrapper {
+      margin-top: 15px;
+      max-width: 300px;
+      max-height: 200px;
+      margin-left: 20px; 
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+
+      img {
+        width: 70%;
+        height: 100%;
+      }
+
+      .control-panel {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        flex-direction: column;
+      }
+    }
+  }
+}
