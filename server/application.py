@@ -29,7 +29,6 @@ endpoint = os.environ.get('RDS_ENDPOINT')
 instance = os.environ.get('RDS_INSTANCE')
 database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
-app.config['SQLALCHEMY_POOL_RECYCLE'] = 3600
 db = SQLAlchemy(app)
 
 # AWS S3 configuration
@@ -272,5 +271,4 @@ class Tags(db.Model):
     return '<Tag(%r, %r)>' % self.id, self.tag
 
 if __name__ == '__main__':
-  db.create_all()
   application.run(debug = True)
