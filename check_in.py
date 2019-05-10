@@ -8,7 +8,12 @@ import os
 log = helpers.setup_logger(os.path.basename(__file__))
 log.info("Starting execution")
 
-config = json.load(open("trailpi_config.json"))
+if os.path.exists("/boot/trailpi_config.json"):
+    config_file = "/boot/trailpi_config.json"
+else:
+    config_file = "trailpi_config.json"
+
+config = json.load(open(config_file))
 
 site_data = { "site" : config["site_number"] }
 headers = { "Content-Type" : "application/json" }
