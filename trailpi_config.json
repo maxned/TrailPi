@@ -8,13 +8,14 @@
     "camera_type": "day",
     "day_to_night_threshold": 7,
     "night_to_day_threshold": 6,
+    "ir_led_always_on": true,
 
     "pir_input_pin": "BOARD12",
     "pir_output_pin": "BOARD11",
     "pi2_input_pin": "BOARD38",
     "pi2_output_pin": "BOARD40",
 
-    "debug": true,
+    "debug": false,
     "image_timestamp_format": "%m:%d:%y-%H:%M:%S:%f",
 
     "image_folder": "images",

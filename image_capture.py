@@ -19,6 +19,18 @@ pir_input = None
 relay = None
 take_picture = False
 
+def set_ir_led_state(state):
+    try:
+        global relay
+        if state == True:
+            relay.write_byte(0x18, 0x1)
+        else:
+            relay.write_byte(0x18, 0x0)
+
+        log.info("IR state set: {}".format(state))
+    except:
+        pass
+
 def take_picture(signum, frame):
     log.debug("Signal take picture")
 
@@ -31,14 +43,21 @@ def enable_capture(signum, frame):
     global capture_enabled
     capture_enabled = True
 
+    # Turn on IR LED if it should be on now
+    if config["ir_led_always_on"]:
+        set_ir_led_state(True)
+
 def disable_capture(signum, frame):
     log.info("Signal capture disabled")
 
     global capture_enabled
     capture_enabled = False
 
+    # Always turn off LED
+    set_ir_led_state(False)
+
 def motion_detected():
-    log.info("motion detected: {}".format(pir_input.value))
+    log.info("Motion detected: {}".format(pir_input.value))
 
     # Mirror the output of the PIR sensor for the other Pi
     pir_output.value = pir_input.value
@@ -46,6 +65,11 @@ def motion_detected():
     if pir_input.value and capture_enabled:
         global take_picture
         take_picture = True
+
+        # If IR LED only on during capture then we need to turn it on
+        # because an event just occured
+        if not config["ir_led_always_on"]:
+            set_ir_led_state(True)
 
 def switch_to_other_camera():
     log.info("Switch to other camera")
@@ -58,13 +82,6 @@ def switch_to_other_camera():
     # Signal to trailpi.py that the night camera should be enabled and self
     # should be disabled
     os.kill(pid, signal.SIGUSR1)
-
-def set_ir_led_state(state):
-    global relay
-    if state == True:
-        relay.write_byte(0x18, 0x1)
-    else:
-        relay.write_byte(0x18, 0x0)
 
 def save_picture(image, timestamp):
     if image:
@@ -103,7 +120,7 @@ def begin_image_capture():
     # Quality is not in percentage, it is logarithmic
     # Do not save the thumbnail to keep the file size smaller
     for capture in camera.capture_continuous(stream, format='jpeg',
-                                            quality=config["quality"], thumbnail=None):
+                                             quality=config["quality"], thumbnail=None):
 
         log.info("Image captured")
         log.info("Analog_gain: " + str(float(camera.analog_gain)))
@@ -136,6 +153,10 @@ def begin_image_capture():
             # Save images into buffer if not saving them to disk
             # Save as tuple together with the timestamp
             image_buffer.append((stream.getvalue(), timestamp))
+
+            # If IR LED only on during capture then we are done so turn it off
+            if not config["ir_led_always_on"]:
+                set_ir_led_state(False)
 
         # Reset the stream to capture a new image
         stream.seek(0)
@@ -180,7 +201,13 @@ if __name__== "__main__":
     pir_input.when_no_motion = motion_detected
 
     # Setup relay i2c communication on i2c bus 1 (default)
+    # Day camera will not have IR LED connected so we don't have to differentiate
+    # between day and night camera with the IR LED
     relay = smbus.SMBus(1)
+
+    # Set default state of IR LED if it should always be on
+    if config["ir_led_always_on"]:
+        set_ir_led_state(True)
 
     # Manually trigger a take_picture event (only for debug)
     if config["debug"]:
