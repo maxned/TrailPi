@@ -2,16 +2,29 @@
 import subprocess
 import helpers
 import time
+import signal
+import os
 
-processes = ["trailpi.py", "image_capture.py", "image_upload.py", "check_in.py"]
+scripts = ["trailpi.py", "image_capture.py", "image_upload.py", "check_in.py"]
 
+# Kill all scripts including self (useful for debugging)
+def kill_everything(signum, frame):
+    for script in scripts:
+        pid = helpers.get_pid(script)
+        if pid != 0:
+            os.kill(pid, signal.SIGKILL)
+    raise
+
+signal.signal(signal.SIGINT, kill_everything)
+
+# Launch all of the scripts and relaunch them if they crash
 while True:
-    for process in processes:
-        pid = helpers.get_pid(process)
+    for script in scripts:
+        pid = helpers.get_pid(script)
 
-        # Restart process if it crashed or hasn't been started yet
+        # Restart script if it crashed or hasn't been started yet
         if pid == 0:
-            ps = subprocess.Popen("python3 %s&" % process, shell=True)
+            ps = subprocess.Popen("python3 %s&" % script, shell=True)
 
-    # Recheck for crashed processes every so often
+    # Recheck for crashed scripts every so often
     time.sleep(60)
