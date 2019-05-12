@@ -211,7 +211,7 @@ if __name__== "__main__":
     relay = smbus.SMBus(1)
 
     # Set default state of IR LED if it should always be on
-    if config["ir_led_always_on"]:
+    if config["ir_led_always_on"] and capture_enabled:
         set_ir_led_state(True)
 
     # Manually trigger a take_picture event (only for debug)

@@ -7,11 +7,11 @@
 
     "camera_type": "day",
     "day_to_night_threshold": 7,
-    "night_to_day_threshold": 6,
+    "night_to_day_threshold": 4,
     "ir_led_always_on": true,
 
-    "pir_input_pin": "BOARD12",
-    "pir_output_pin": "BOARD11",
+    "pir_input_pin": "BOARD11",
+    "pir_output_pin": "BOARD36",
     "pi2_input_pin": "BOARD38",
     "pi2_output_pin": "BOARD40",
 
