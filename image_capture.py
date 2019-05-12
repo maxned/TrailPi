@@ -122,9 +122,9 @@ def begin_image_capture():
     for capture in camera.capture_continuous(stream, format='jpeg',
                                              quality=config["quality"], thumbnail=None):
 
-        log.info("Image captured")
-        log.info("Analog_gain: " + str(float(camera.analog_gain)))
-        log.info("Digital_gain: " + str(float(camera.digital_gain)))
+        log.info("Image Captured")
+        log.info("Analog Gain: " + str(float(camera.analog_gain)))
+        log.info("Digital Gain: " + str(float(camera.digital_gain)))
 
         # Timestamp the image
         timestamp = datetime.now().strftime(config["image_timestamp_format"])
@@ -162,12 +162,14 @@ def begin_image_capture():
         stream.seek(0)
         stream.truncate()
 
-        # Switch to the other camera based on the specified threshold
+        # Switch to the other camera based on the specified thresholds
         if config["camera_type"] == "day" and capture_enabled and \
-                camera.analog_gain > config["day_to_night_threshold"]:
+                camera.analog_gain >= config["day_to_night_analog_threshold"] and \
+                camera.digital_gain >= config["day_to_night_digital_threshold"]:
             switch_to_other_camera()
         elif config["camera_type"] == "night" and capture_enabled and \
-                camera.analog_gain < config["night_to_day_threshold"]:
+                camera.analog_gain <= config["night_to_day_analog_threshold"] and \
+                camera.digital_gain <= config["night_to_day_digital_threshold"]:
             switch_to_other_camera()
 
         # Sleep between images (needed to allow auto exposure to work)

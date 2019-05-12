@@ -6,8 +6,10 @@
     "capture_chunk_size": 5,
 
     "camera_type": "day",
-    "day_to_night_threshold": 7,
-    "night_to_day_threshold": 4,
+    "day_to_night_analog_threshold": 7.5,
+    "night_to_day_analog_threshold": 2,
+    "day_to_night_digital_threshold": 1.3,
+    "night_to_day_digital_threshold": 1.1,
     "ir_led_always_on": true,
 
     "pir_input_pin": "BOARD11",
