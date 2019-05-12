@@ -2,6 +2,7 @@ from sys import version_info, exit
 assert (version_info > (3, 6)), "Python 3.6 or later is required."
 import logging
 from flask import Flask, request, jsonify, Response
+from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.mysql import INTEGER, TINYINT, DATETIME
@@ -12,6 +13,7 @@ import activity
 import json
 import boto3
 import datetime
+from auth.views import auth_blueprint
 
 UPLOAD_FOLDER = '/home/brody/GitHub/TrailPi/server/uploaded_images' # FIXME not the actual path
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']) # TODO: support more extensions?
@@ -23,12 +25,17 @@ application = app = Flask(__name__) # needs to be named "application" for elasti
 CORS(app)
 app.secret_key = 't_pi!sctkey%20190203#'
 
-# environment variables 
+# environment variables
 # AWS RDS configuration
 username = os.environ.get('RDS_USERNAME')
 password = os.environ.get('RDS_PASSWORD')
 endpoint = os.environ.get('RDS_ENDPOINT')
 instance = os.environ.get('RDS_INSTANCE')
+database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+db = SQLAlchemy(app)
+app.url_map.converters['list'] = utils.ListConverter
+app.secret_key = 't_pi!sctkey%20190203#'
 
 # AWS S3 configuration
 BUCKET_NAME = os.environ.get('BUCKET')
@@ -39,13 +46,17 @@ database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 db = SQLAlchemy(app)
 app.url_map.converters['list'] = utils.ListConverter
-app.secret_key = 't_pi!sctkey%20190203#' 
+app.secret_key = 't_pi!sctkey%20190203#'
 
 s3 = boto3.resource(
     's3',
     aws_access_key_id=AWS_ACCESS_KEY,
     aws_secret_access_key=AWS_SECRET_KEY)
 bucket = s3.Bucket(BUCKET_NAME)
+
+bcrypt = Bcrypt(app)
+app.register_blueprint(auth_blueprint)
+
 
 def is_allowed_site(site):
     """Returns whether passed site is valid
@@ -193,7 +204,7 @@ def get_files():
 
 @app.route('/TrailPiServer/api/images/<startDate>/<endDate>/<list:requested_sites>', methods=['GET'])
 def get_images(startDate, endDate, requested_sites):
-  ''' 
+  '''
     returns all of the images within the interval defined by startDate and endDate
 
     Arguments:
@@ -202,14 +213,14 @@ def get_images(startDate, endDate, requested_sites):
       requested_sites - list of sites in request
   '''
   results = db.session.query(Pictures).filter(Pictures.site.in_(requested_sites), Pictures.date >= startDate, Pictures.date <= endDate)
-  
+
   imageInfo = []
   for record in results:
     imageInfo.append(
       {
         'id': record.__dict__['pic_id'],
         'site': record.__dict__['site'],
-        'timestamp': record.__dict__['date'], 
+        'timestamp': record.__dict__['date'],
         'url': record.__dict__['url']
       }
     )
@@ -228,8 +239,8 @@ def download_file(filename):
   '''
   s3_client = boto3.client(
     's3',
-    aws_access_key_id=AWS_ACCESS_KEY, 
-    aws_secret_access_key=AWS_SECRET_KEY 
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY
   )
   file = s3_client.get_object(Bucket=BUCKET_NAME, Key=filename)
   return Response (
@@ -279,7 +290,7 @@ class Tags(db.Model):
 
   def __repr__(self):
     return '<Tag(%r, %r)>' % (self.id, self.tag)
-    
+
 db.create_all()
 
 if __name__ == '__main__':
