@@ -1,20 +1,19 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './PicturesPage.scss';
 
-import { Button } from 'reactstrap';
-
+import PicturePanel from './PicturePanel';
 
 class PicturesPage extends React.Component {
   constructor() {
     super();
     this.state = {
-      images: []
+      images: [],
     };
     this.downloadImage = this.downloadImage.bind(this);
   }
 
   componentDidMount() {
-    console.log(this.props.location.state.sites);
     this.getImages({
       startDate: this.props.location.state.startDate,
       endDate: this.props.location.state.endDate,
@@ -75,6 +74,8 @@ class PicturesPage extends React.Component {
     return dateString;
   }
 
+  
+
   render() {
     const s3BucketURL = 'https://s3-us-west-2.amazonaws.com/trailpi-images/';
     return (
@@ -82,26 +83,21 @@ class PicturesPage extends React.Component {
         <div className='image-panel'>
           {this.state.images.map((imageName, key) => {
             let imageURL = s3BucketURL + imageName;
-            return (
-              <div key={key} className='image-wrapper'>
-                <img src={imageURL} />
-                <div className='control-panel'>
-                  <h6>{imageName.slice(0, 5)}</h6>
-                  <Button
-                    color='primary'
-                    onClick={() => this.downloadImage(imageName)}
-                    size='sm'
-                  >
-                    download
-                  </Button>
-                </div>
-              </div>
+            return(
+              <PicturePanel
+                picture={imageURL}
+                date={'today'}
+              />
             );
           })}
         </div>
       </div>
     );
   }
+};
+
+PicturesPage.propTypes = {
+  location: PropTypes.object.isRequired
 };
 
 export default PicturesPage;

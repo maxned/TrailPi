@@ -1,5 +1,5 @@
 import MapPage from '../pages/MapPage';
-import PicturesPage from '../pages/PicturesPage';
+import PicturesPage from '../pages/pictures/PicturesPage';
 
 export const routes = [
   {
