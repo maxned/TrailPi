@@ -3,21 +3,34 @@ assert (version_info > (3, 6)), "Python 3.6 or later is required."
 import logging
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.dialects.mysql import INTEGER, TINYINT
 from utils import ListConverter
 import os
 from werkzeug.utils import secure_filename
 import activity
 import json
 import boto3
+import datetime
 
 UPLOAD_FOLDER = '/home/brody/GitHub/TrailPi/server/uploaded_images' # FIXME not the actual path
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']) # TODO support more extensions?
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']) # TODO: support more extensions?
 
-logging.basicConfig(level = logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger('TrailServerMain')
 
 application = app = Flask(__name__) # needs to be named "application" for elastic beanstalk
 CORS(app)
+app.secret_key = 't_pi!sctkey%20190203#'
+
+# MySQL database initialization
+username = os.environ.get('RDS_USERNAME')
+password = os.environ.get('RDS_PASSWORD')
+endpoint = os.environ.get('RDS_ENDPOINT')
+instance = os.environ.get('RDS_INSTANCE')
+database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+db = SQLAlchemy(app)
 app.url_map.converters['list'] = ListConverter
 app.secret_key = 't_pi!sctkey%20190203#' 
 
@@ -27,25 +40,11 @@ AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
 
 s3 = boto3.resource(
-    's3', 
-    aws_access_key_id=AWS_ACCESS_KEY, 
+    's3',
+    aws_access_key_id=AWS_ACCESS_KEY,
     aws_secret_access_key=AWS_SECRET_KEY)
 bucket = s3.Bucket(BUCKET_NAME)
 
-"""
-try:
-    # TODO set more permanent information
-    myDB = mysql.connector.connect(user = 'TrailPiAdmin', host = 'localhost',
-                                  password = 'tmppw', database = 'TrailPiImages')
-except mysql.connector.Error as err:
-    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-        logger.error('Something is wrong with your user name or password')
-    elif err.errno == errorcode.ER_BAD_DB_ERROR:
-        logger.error('Database does not exist')
-    else:
-        logger.error('Encountered error: {}'.format(err))
-    exit()
-"""
 def is_allowed_site(site):
     """Returns whether passed site is valid
 
@@ -72,7 +71,7 @@ def is_allowed_file(filename):
 
 def is_matched_date(date, startDate, endDate):
   '''
-    checks if a date falls within a given interval 
+    checks if a date falls within a given interval
 
     Arguments:
       date - the date to be checked
@@ -81,12 +80,12 @@ def is_matched_date(date, startDate, endDate):
   '''
   if int(date, 10) >= int(startDate, 10) and int(date, 10) <= int(endDate, 10):
     return True
-  
+
   return False
 
 @app.route("/TrailPiServer/api/check_in", methods=['POST'])
 def api_check_in():
-    ''' TODO -> check for content-type?? '''
+    ''' TODO: -> check for content-type?? '''
 
     data = request.get_json()
     logger.debug('Data: {}'.format(data))
@@ -118,14 +117,14 @@ def api_check_in():
 
 @app.route("/TrailPiServer/api/image_transfer", methods=['POST'])
 def api_image_transfer():
-    ''' TODO -> check for content-type?? '''
+    ''' TODO: -> check for content-type?? '''
 
-    if 'file' not in request.files: 
+    if 'file' not in request.files:
         logger.warning('Missing file field in POST')
         response = jsonify({'status': 'missing file field'})
         return response, 400
 
-    if 'data' not in request.files: 
+    if 'data' not in request.files:
         logger.warning('Missing data in POST')
         response = jsonify({'status': 'missing data field'})
         return response, 400
@@ -150,16 +149,17 @@ def api_image_transfer():
         filename = secure_filename(file.filename)
         bucket.Object(filename).put(Body=file)
 
-        # TODO dynamically determine a save location
-        #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        # url format from https://forums.aws.amazon.com/thread.jspa?threadID=93828
+        # TODO: check the url is correct, and better way for date?
+        new_data = Pictures(site=data['site'], date=datetime.datetime.utcnow, url=f'https://s3.amazon.com/{BUCKET_NAME}/{filename}')
 
-        """mycursor = myDB.cursor()
-
-        sql = 'INSERT INTO Images (name, path) VALUES (%s, %s)'
-        val = [(filename, os.path.join(app.config['UPLOAD_FOLDER'], filename))]
-
-        mycursor.executemany(sql, val)
-        myDB.commit()"""
+        try:
+            db.session.add(new_data)
+            db.session.commit()
+            db.session.close()
+        except:
+            logger.warning('Had to rollback during entry insertion')
+            db.session.rollback()
 
         response = jsonify({'status': 'image upload SUCCESS'})
         return response, 200
@@ -170,13 +170,13 @@ def api_image_transfer():
 
 # TODO: find a way to do this with boto3 resource instead of client
 @app.route('/TrailPiServer/api/files', methods=['GET'])
-def get_files(): 
+def get_files():
   '''
     list all files inside of the S3 bucket
   '''
   client = boto3.client(
-      's3', 
-      aws_access_key_id=AWS_ACCESS_KEY, 
+      's3',
+      aws_access_key_id=AWS_ACCESS_KEY,
       aws_secret_access_key=AWS_SECRET_KEY
   )
   files = client.list_objects_v2(Bucket=BUCKET_NAME)
@@ -193,15 +193,15 @@ def get_image_urls(startDate, endDate, requested_sites):
   ''' 
     returns all of the images within the interval defined by startDate and endDate
 
-    Arguments: 
+    Arguments:
       startDate - 6 character string in MMDDYY format describing the start of the interval
       endDate - 6 character string in MMDDYY format describing the end of the interval
       requested_sites - list of sites in request
   '''
   client = boto3.client(
     's3',
-    aws_access_key_id=AWS_ACCESS_KEY, 
-    aws_secret_access_key=AWS_SECRET_KEY 
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY
   )
   files = client.list_objects_v2(Bucket=BUCKET_NAME)
 
@@ -238,6 +238,45 @@ def download_file(filename):
     mimetype='text/plain',
     headers={"Content-Disposition": "attachment; filename={}".format(filename)}
   )
+
+  from sqlalchemy.dialects.mysql import INTEGER, TINYINT
+
+# SQL Models
+# TODO -> move these to another file. This is just for an elastic beanstalk test
+
+class Pictures(db.Model):
+  """Represents an entry for the Pictures table
+  """
+  __tablename__ = 'Pictures'
+
+  pic_id = db.Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+  site = db.Column(TINYINT(display_width=2, unsigned=True), nullable=False)
+  date = db.Column(db.DateTime, nullable=False)
+  url = db.Column(db.String(200), nullable=False)
+  tags = db.relationship('Tags', backref='picture', lazy=True)
+
+  def __init__(self, site, date, url):
+    self.site = site
+    self.date = date
+    self.url = url
+
+  def __repr__(self):
+    return '<Picture(%r, %r, %r)>' % self.site, self.date, self.url
+
+class Tags(db.Model):
+  """Represents an entry for the Tags table
+  """
+  __tablename__ = 'Tags'
+
+  pic_id = db.Column(INTEGER(unsigned=True), db.ForeignKey('Pictures.pic_id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
+  tag = db.Column(db.String(length=20), primary_key=True)
+
+  def __init__(self, pic_id, tag):
+    self.pic_id = pic_id
+    self.tag = tag
+
+  def __repr__(self):
+    return '<Tag(%r, %r)>' % self.id, self.tag
 
 if __name__ == '__main__':
   application.run(debug = True)
