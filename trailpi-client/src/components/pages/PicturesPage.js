@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './PicturesPage.scss';
 
-import PicturePanel from './PicturePanel';
+import PicturePanel from '../pictures/PicturePanel';
 
 class PicturesPage extends React.Component {
   constructor() {
