@@ -149,9 +149,8 @@ def api_image_transfer():
         filename = secure_filename(file.filename)
         bucket.Object(filename).put(Body=file)
 
-        # url format from https://forums.aws.amazon.com/thread.jspa?threadID=93828
-        # TODO: check the url is correct, and better way for date?
-        new_data = Pictures(site=data['site'], date=utils.get_local_date(), url=f'https://s3.amazon.com/{BUCKET_NAME}/{filename}')
+        aws_s3_url = f'https://s3-us-west-2.amazonaws.com/{BUCKET_NAME}/{filename}''
+        new_data = Pictures(site=data['site'], date=utils.get_local_date(), url=aws_s3_url)
 
         try:
             db.session.add(new_data)
