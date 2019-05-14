@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.mysql import INTEGER, TINYINT, DATE
-from utils import ListConverter
+import utils
 import os
 from werkzeug.utils import secure_filename
 import activity
@@ -31,7 +31,7 @@ instance = os.environ.get('RDS_INSTANCE')
 database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 db = SQLAlchemy(app)
-app.url_map.converters['list'] = ListConverter
+app.url_map.converters['list'] = utils.ListConverter
 app.secret_key = 't_pi!sctkey%20190203#' 
 
 # AWS S3 configuration
@@ -151,7 +151,7 @@ def api_image_transfer():
 
         # url format from https://forums.aws.amazon.com/thread.jspa?threadID=93828
         # TODO: check the url is correct, and better way for date?
-        new_data = Pictures(site=data['site'], date=datetime.date.today(), url=f'https://s3.amazon.com/{BUCKET_NAME}/{filename}')
+        new_data = Pictures(site=data['site'], date=utils.get_local_date(), url=f'https://s3.amazon.com/{BUCKET_NAME}/{filename}')
 
         try:
             db.session.add(new_data)
@@ -249,7 +249,7 @@ class Pictures(db.Model):
 
   pic_id = db.Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
   site = db.Column(TINYINT(display_width=2, unsigned=True), nullable=False)
-  date = db.Column(DATE, default=datetime.datetime.today(), nullable=False)
+  date = db.Column(DATE, default=utils.get_local_date(), nullable=False)
   url = db.Column(db.String(200), nullable=False)
   tags = db.relationship('Tags', backref='picture', lazy=True)
 
