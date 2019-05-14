@@ -11,4 +11,4 @@ class ListConverter(BaseConverter):
 
 def get_local_date():
   local_date = datetime.now()
-  return local_date.strftime('%Y-%m-%d')
+  return local_date.strftime('%Y-%m-%d %H:%M:%S')
