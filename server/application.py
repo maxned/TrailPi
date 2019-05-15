@@ -4,7 +4,7 @@ import logging
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.mysql import INTEGER, TINYINT, DATE
+from sqlalchemy.dialects.mysql import INTEGER, TINYINT, DATETIME
 import utils
 import os
 from werkzeug.utils import secure_filename
@@ -149,9 +149,8 @@ def api_image_transfer():
         filename = secure_filename(file.filename)
         bucket.Object(filename).put(Body=file)
 
-        # url format from https://forums.aws.amazon.com/thread.jspa?threadID=93828
-        # TODO: check the url is correct, and better way for date?
-        new_data = Pictures(site=data['site'], date=utils.get_local_date(), url=f'https://s3.amazon.com/{BUCKET_NAME}/{filename}')
+        aws_s3_url = f'https://s3-us-west-2.amazonaws.com/{BUCKET_NAME}/{filename}'
+        new_data = Pictures(site=data['site'], date=utils.get_local_date(), url=aws_s3_url)
 
         try:
             db.session.add(new_data)
@@ -189,7 +188,7 @@ def get_files():
   return response, 200
 
 @app.route('/TrailPiServer/api/images/<startDate>/<endDate>/<list:requested_sites>', methods=['GET'])
-def get_image_urls(startDate, endDate, requested_sites):
+def get_images(startDate, endDate, requested_sites):
   ''' 
     returns all of the images within the interval defined by startDate and endDate
 
@@ -198,24 +197,19 @@ def get_image_urls(startDate, endDate, requested_sites):
       endDate - 6 character string in MMDDYY format describing the end of the interval
       requested_sites - list of sites in request
   '''
-  client = boto3.client(
-    's3',
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY
-  )
-  files = client.list_objects_v2(Bucket=BUCKET_NAME)
-
-  filenames = []  
+  results = db.session.query(Pictures).filter(Pictures.site.in_(requested_sites), Pictures.date >= startDate, Pictures.date <= endDate)
   
-  # filter images based on date and camera selection
-  for obj in files['Contents']: 
-    filename = obj['Key']
-    file_site = filename[0:5]
-    file_date = filename[6:12]
-    if is_matched_date(file_date, startDate, endDate) and file_site in requested_sites:
-      filenames.append(filename)
+  imageInfo = []
+  for record in results:
+    imageInfo.append(
+      {
+        'site': record.__dict__['site'],
+        'timestamp': record.__dict__['date'], 
+        'url': record.__dict__['url']
+      }
+    )
 
-  response = jsonify({'filenames': filenames})
+  response = jsonify({'images': imageInfo})
   return response, 200
 
 @app.route('/TrailPiServer/api/downloadFile/<filename>', methods=['GET'])
@@ -249,7 +243,7 @@ class Pictures(db.Model):
 
   pic_id = db.Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
   site = db.Column(TINYINT(display_width=2, unsigned=True), nullable=False)
-  date = db.Column(DATE, default=utils.get_local_date(), nullable=False)
+  date = db.Column(DATETIME, default=utils.get_local_date(), nullable=False)
   url = db.Column(db.String(200), nullable=False)
   tags = db.relationship('Tags', backref='picture', lazy=True)
 
@@ -259,7 +253,7 @@ class Pictures(db.Model):
     self.url = url
 
   def __repr__(self):
-    return '<Picture(%r, %r, %r)>' % self.site, self.date, self.url
+    return '<Picture(%r, %r, %r)>' % (self.site, self.date, self.url)
 
 class Tags(db.Model):
   """Represents an entry for the Tags table
