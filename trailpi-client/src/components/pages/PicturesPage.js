@@ -10,10 +10,15 @@ class PicturesPage extends React.Component {
     super();
     this.state = {
       images: [],
-      modalToggled: false
+      modalToggled: false,
+      tags: null,
+      selectedSite: null
     };
     this.downloadImage = this.downloadImage.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
+    this.addTags = this.addTags.bind(this);
+    this.updateTags = this.updateTags.bind(this);
+    this.saveTags = this.saveTags.bind(this);
   }
 
   componentDidMount() {
@@ -79,6 +84,20 @@ class PicturesPage extends React.Component {
     this.setState(prevState => ({modalToggled: !prevState.modalToggled}))
   }
 
+  addTags(selectedSite) { // pop-up the modal
+    this.toggleModal();
+    this.setState({ selectedSite });
+  }
+
+  updateTags(event) {
+    let tags = event.target.value;
+    this.setState({ tags });
+  }
+
+  saveTags() { // hide the modal and save the user input
+    this.toggleModal();
+  }
+
   render() {
     return (
       <div className='picturesPage-wrapper'>
@@ -88,17 +107,17 @@ class PicturesPage extends React.Component {
               picture={image.url}
               date={image.timestamp}
               siteNumber={image.site}
-              onPictureSelect={this.toggleModal}
+              onPictureSelect={this.addTags}
             />
           );
         })}
         <Modal isOpen={this.state.modalToggled} toggle={this.toggleModal} className={this.props.className}>
-          <ModalHeader toggle={this.toggle}>Tags</ModalHeader>
+          <ModalHeader toggle={this.toggle}>Photo Tags</ModalHeader>
           <ModalBody>
-            <Input placeholder="tag1, tag2, tag3, etc..." />
+            <Input placeholder="tag1, tag2, tag3, etc..." onChange={(value) => this.updateTags(value)}/>
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" onClick={this.toggleModal}>Submit</Button>{' '}
+            <Button color="primary" onClick={this.saveTags}>Submit</Button>{' '}
             <Button color="secondary" onClick={this.toggleModal}>Cancel</Button>
           </ModalFooter>
         </Modal>
