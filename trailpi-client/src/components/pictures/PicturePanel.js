@@ -1,25 +1,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './PicturePanel.scss';
 
-// given an array of strings, build a single string
-const buildTagString = tags => {
-  return tags.join(', ');
-}
+class PicturePanel extends React.Component {
+  // given an array of tags, return them as a string
+  buildTagString(tags) {
+    return tags.join(', ');
+  }
 
-const PicturePanel = props => {
-  return (
-    <div className='panel-wrapper'>
-      <div className='picture-wrapper'>
-        <img src={props.picture} />
+  render() {
+    return (
+      <div className='panel-wrapper'>
+        <div className='picture-wrapper' onClick={this.props.onPictureSelect}>
+          <img src={this.props.picture} />
+        </div>
+        <div className='info-wrapper'>
+          <div><b>Date:</b> {this.props.date}</div>
+          <div><b>Site No:</b> {this.props.siteNumber}</div>
+          <div><b>Tags:</b> {() => this.buildTagString(this.props.tags)}</div>
+        </div>
       </div>
-      <div className='info-wrapper'>
-        <div>Date: {props.date}</div>
-        <div>Site Name: {props.siteName}</div>
-        <div>Site Number: {props.siteNumber}</div>
-        <div>Tags: { () => buildTagString(props.tags) }</div>
-      </div>
-    </div>
-  );
+    );
+  }
 }
 
 PicturePanel.propTypes = {
@@ -27,6 +29,7 @@ PicturePanel.propTypes = {
   date: PropTypes.string.isRequired,
   siteName: PropTypes.string.isRequired,
   siteNumber: PropTypes.number.isRequired,
+  onPictureSelect: PropTypes.func.isRequired,
   tags: PropTypes.array
 }
 
