@@ -47,8 +47,8 @@ def upload_image(image_name):
 # to make sure it has been saved to disk completely
 # Return a bool whether an image is valid
 def valid_image(image_name):
-    image_name = image_name[:-4] # Strip the .jpg at the end of the filename
-    image_time = datetime.strptime(image_name, config["image_timestamp_format"]) # Same format as trailpi.py
+    image_name = image_name[:-4] # Strip the .jpg from the end of the filename
+    image_time = datetime.strptime(image_name, config["image_timestamp_format"])
     now = datetime.now()
 
     delta = now - image_time
