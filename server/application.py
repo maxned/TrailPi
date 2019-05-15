@@ -203,7 +203,7 @@ def get_images(startDate, endDate, requested_sites):
   for record in results:
     imageInfo.append(
       {
-        'site': record.__dict__['site']
+        'site': record.__dict__['site'],
         'timestamp': record.__dict__['date'], 
         'url': record.__dict__['url']
       }

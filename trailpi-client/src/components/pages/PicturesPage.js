@@ -1,20 +1,27 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import './PicturesPage.scss';
 
-import { Button } from 'reactstrap';
-
+import PicturePanel from '../pictures/PicturePanel';
+import { Input, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 
 class PicturesPage extends React.Component {
   constructor() {
     super();
     this.state = {
-      images: []
+      images: [],
+      modalToggled: false,
+      tags: null,
+      selectedSite: null
     };
     this.downloadImage = this.downloadImage.bind(this);
+    this.toggleModal = this.toggleModal.bind(this);
+    this.addTags = this.addTags.bind(this);
+    this.updateTags = this.updateTags.bind(this);
+    this.saveTags = this.saveTags.bind(this);
   }
 
   componentDidMount() {
-    console.log(this.props.location.state.sites);
     this.getImages({
       startDate: this.props.location.state.startDate,
       endDate: this.props.location.state.endDate,
@@ -39,11 +46,7 @@ class PicturesPage extends React.Component {
     let response = await fetch(url);
     let data = await response.json();
 
-    let images = [];
-    for (let file of data.filenames)
-      images.push(file);
-
-    this.setState({ images });
+    this.setState({ images: data.images });
   }
 
   async downloadImage(imageName) {
@@ -53,15 +56,20 @@ class PicturesPage extends React.Component {
     window.open(url);
   }
 
-  // return a date string of the format: MMDDYY
+  // return a date string of the format: YYYY-MM-DD
   buildDateString(date) {
     let dateString = '';
+
+    // append year
+    dateString += date.getFullYear().toString();
+    dateString += '-';
 
     // append month
     if (date.getMonth() < 10)
       dateString += '0' + (date.getMonth() + 1).toString();
     else
       dateString += (date.getMonth() + 1).toString();
+    dateString += '-';
 
     // append days
     if (date.getDate() < 10)
@@ -69,39 +77,57 @@ class PicturesPage extends React.Component {
     else
       dateString += date.getDate().toString();
 
-    // append year
-    dateString += date.getFullYear().toString().substr(-2);
-
     return dateString;
   }
 
+  toggleModal() {
+    this.setState(prevState => ({modalToggled: !prevState.modalToggled}))
+  }
+
+  addTags(selectedSite) { // pop-up the modal
+    this.toggleModal();
+    this.setState({ selectedSite });
+  }
+
+  updateTags(event) {
+    let tags = event.target.value;
+    this.setState({ tags });
+  }
+
+  saveTags() { // hide the modal and save the user input
+    this.toggleModal();
+  }
+
   render() {
-    const s3BucketURL = 'https://s3-us-west-2.amazonaws.com/trailpi-images/';
     return (
       <div className='picturesPage-wrapper'>
-        <div className='image-panel'>
-          {this.state.images.map((imageName, key) => {
-            let imageURL = s3BucketURL + imageName;
-            return (
-              <div key={key} className='image-wrapper'>
-                <img src={imageURL} />
-                <div className='control-panel'>
-                  <h6>{imageName.slice(0, 5)}</h6>
-                  <Button
-                    color='primary'
-                    onClick={() => this.downloadImage(imageName)}
-                    size='sm'
-                  >
-                    download
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {this.state.images.map((image, key) => {
+          return (
+            <PicturePanel
+              picture={image.url}
+              date={image.timestamp}
+              siteNumber={image.site}
+              onPictureSelect={this.addTags}
+            />
+          );
+        })}
+        <Modal isOpen={this.state.modalToggled} toggle={this.toggleModal} className={this.props.className}>
+          <ModalHeader toggle={this.toggle}>Photo Tags</ModalHeader>
+          <ModalBody>
+            <Input placeholder="tag1, tag2, tag3, etc..." onChange={(value) => this.updateTags(value)}/>
+          </ModalBody>
+          <ModalFooter>
+            <Button color="primary" onClick={this.saveTags}>Submit</Button>{' '}
+            <Button color="secondary" onClick={this.toggleModal}>Cancel</Button>
+          </ModalFooter>
+        </Modal>
       </div>
     );
   }
+};
+
+PicturesPage.propTypes = {
+  location: PropTypes.object.isRequired
 };
 
 export default PicturesPage;
