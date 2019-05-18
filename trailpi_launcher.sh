@@ -1,4 +1,4 @@
 #!/bin/sh
 
 cd ~/TrailPi
-python3 execution.py&
+python3 trailpi.py&

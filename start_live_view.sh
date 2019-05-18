@@ -1,11 +1,11 @@
 
-EXECUTION_PID=$(ps -aef | grep 'execution.py' | grep -v 'grep' | awk '{ print $2 }')
+TRAILPI_PID=$(ps -aef | grep 'trailpi.py' | grep -v 'grep' | awk '{ print $2 }')
 
-if [[ -n "$EXECUTION_PID" ]]; then
+if [[ -n "$TRAILPI_PID" ]]; then
     echo "Stopping TrailPi"
-    kill -s SIGINT $EXECUTION_PID
+    kill -s SIGINT $TRAILPI_PID
 
-    # Allow execution to kill all of the scripts
+    # Allow trailpi.py to kill all of the other scripts
     sleep 3
 fi
 

@@ -1,4 +1,6 @@
 
+# This script provides functions for use in other scripts.
+
 import subprocess
 import logging
 from logging.handlers import RotatingFileHandler

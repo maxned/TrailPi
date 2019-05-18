@@ -1,4 +1,7 @@
 
+# This script is in charge of checking in to the server to let it know that the
+# Pi is still alive.
+
 import time
 import requests
 import json

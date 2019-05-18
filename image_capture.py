@@ -1,4 +1,13 @@
 
+# This script is in charge capturing images and saving them to disk.
+
+# Basic method of operation:
+# - Set everything up
+# - Indefinitely run the image capture
+# - Use signals to pause the image capture when necessary
+# - Flags are used to specify what happens in the image capture loop based
+#   on different events such as enabling/disabling capture or detected motion.
+
 from picamera import PiCamera
 from gpiozero import MotionSensor, DigitalOutputDevice
 from datetime import datetime
@@ -74,12 +83,12 @@ def motion_detected():
 def switch_to_other_camera():
     log.info("Switch to other camera")
 
-    pid = helpers.get_pid("trailpi.py")
-    if pid == 0: # trailpi isn't running for some reason
-        log.warning("trailpi.py PID not found")
+    pid = helpers.get_pid("camera_manager.py")
+    if pid == 0: # camera_manager isn't running for some reason
+        log.warning("camera_manager.py PID not found")
         return
 
-    # Signal to trailpi.py that the night camera should be enabled and self
+    # Signal to camera_manager.py that the night camera should be enabled and self
     # should be disabled
     os.kill(pid, signal.SIGUSR1)
 

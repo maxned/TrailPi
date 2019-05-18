@@ -1,4 +1,11 @@
 
+# This script is in charge of uploading images to the server.
+
+# Basic method of operation:
+# - Check for images in the image folder every so often.
+# - If an image exists, upload it to the server.
+# - If successfully uploaded, delete the image.
+
 from datetime import datetime
 import os
 import time
@@ -90,5 +97,5 @@ if __name__== "__main__":
                 except:
                     log.error("Could not remove image: {}".format(image_name))
 
-        # Check every 5 seconds
+        # Check every so often
         time.sleep(config["image_upload_check_interval_sec"])
