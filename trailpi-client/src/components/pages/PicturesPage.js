@@ -10,6 +10,7 @@ class PicturesPage extends React.Component {
     super();
     this.state = {
       images: [],
+      isImageSelected: [], // array of booleans 
       modalToggled: false,
       tags: null,
       selectedSite: null
