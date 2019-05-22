@@ -13,7 +13,6 @@ from gpiozero import MotionSensor, DigitalOutputDevice
 from datetime import datetime
 import helpers
 import json
-import smbus
 import time
 import signal
 import io
@@ -25,20 +24,12 @@ log = None
 config = None
 pir_output = None
 pir_input = None
-relay = None
+relay_output = None
 take_picture = False
 
 def set_ir_led_state(state):
-    try:
-        global relay
-        if state == True:
-            relay.write_byte(0x18, 0x1)
-        else:
-            relay.write_byte(0x18, 0x0)
-
-        log.info("IR state set: {}".format(state))
-    except:
-        pass
+    relay_output.value = state
+    log.info("IR state set: {}".format(state))
 
 def take_picture(signum, frame):
     log.debug("Signal take picture")
@@ -216,10 +207,9 @@ if __name__== "__main__":
     pir_input.when_motion = motion_detected
     pir_input.when_no_motion = motion_detected
 
-    # Setup relay i2c communication on i2c bus 1 (default)
     # Day camera will not have IR LED connected so we don't have to differentiate
-    # between day and night camera with the IR LED
-    relay = smbus.SMBus(1)
+    # turning on the relay between day and night camera with the IR LED
+    relay_output = DigitalOutputDevice(config["relay_output_pin"])
 
     # Set default state of IR LED if it should always be on
     if config["ir_led_always_on"] and capture_enabled:

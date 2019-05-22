@@ -16,6 +16,7 @@
     "pir_output_pin": "BOARD36",
     "pi2_input_pin": "BOARD38",
     "pi2_output_pin": "BOARD40",
+    "relay_output_pin": "BOARD32",
 
     "debug": false,
     "image_timestamp_format": "%m:%d:%y-%H:%M:%S:%f",
