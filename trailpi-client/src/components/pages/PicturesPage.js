@@ -10,15 +10,16 @@ class PicturesPage extends React.Component {
     super();
     this.state = {
       images: [],
+      selectedImages: [], // array of objects -> {id, isSelected}
       modalToggled: false,
       tags: null,
-      selectedSite: null
     };
     this.downloadImage = this.downloadImage.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
     this.addTags = this.addTags.bind(this);
     this.updateTags = this.updateTags.bind(this);
     this.saveTags = this.saveTags.bind(this);
+    this.selectImage = this.selectImage.bind(this);
   }
 
   componentDidMount() {
@@ -46,7 +47,14 @@ class PicturesPage extends React.Component {
     let response = await fetch(url);
     let data = await response.json();
 
-    this.setState({ images: data.images });
+    let selectedImages = []; // initialize selectedImages array 
+    data.images.map(image => {
+      selectedImages.push({
+        id: image.id,
+        isSelected: false
+      });
+    });
+    this.setState({ images: data.images, selectedImages });
   }
 
   async downloadImage(imageName) {
@@ -84,9 +92,19 @@ class PicturesPage extends React.Component {
     this.setState(prevState => ({modalToggled: !prevState.modalToggled}))
   }
 
-  addTags(selectedSite) { // pop-up the modal
+  selectImage(imageId) {
+    let oldImageState = this.state.selectedImages.filter((image) => { // get the previous selection state
+      return image.id === imageId;
+    });
+    let tempImages = this.state.selectedImages.filter((image) => { // remove the old element
+      return image.id !== imageId;
+    });
+    tempImages.push({ id: oldImageState[0].id, isSelected: !oldImageState[0].isSelected });
+    this.setState({ selectedImages: tempImages });
+  }
+
+  addTags() { // pop-up the modal
     this.toggleModal();
-    this.setState({ selectedSite });
   }
 
   updateTags(event) {
@@ -98,16 +116,26 @@ class PicturesPage extends React.Component {
     this.toggleModal();
   }
 
+  getClass(imageId) {
+    let image = this.state.selectedImages.filter((image) => {
+      return image.id === imageId;
+    });
+    if (image[0].isSelected === true) 
+      return 'picture-wrapper-selected';
+    else
+      return 'picture-wrapper';
+  }
+
   render() {
     return (
       <div className='picturesPage-wrapper'>
         {this.state.images.map((image, key) => {
+          let className = this.getClass(image.id);
           return (
             <PicturePanel
-              picture={image.url}
-              date={image.timestamp}
-              siteNumber={image.site}
-              onPictureSelect={this.addTags}
+              imageInfo={image}
+              className={className}
+              onPictureSelect={this.selectImage}
             />
           );
         })}
