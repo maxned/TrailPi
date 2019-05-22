@@ -233,9 +233,6 @@ def download_file(filename):
     headers={"Content-Disposition": "attachment; filename={}".format(filename)}
   )
 
-# SQL Models
-# TODO -> move these to another file. This is just for an elastic beanstalk test
-
 class Pictures(db.Model):
   """Represents an entry for the Pictures table
   """
