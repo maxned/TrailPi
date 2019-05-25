@@ -306,7 +306,7 @@ class User(db.Model):
     registered_on = db.Column(db.DateTime, nullable=False)
     permissions = db.Column(db.Integer, nullable=False, default=1)
 
-    def __init__(self, username, password, permissions=False):
+    def __init__(self, username, password, permissions=1):
         self.username = username
         self.password = bcrypt.generate_password_hash(
             password, app.config.get('BCRYPT_LOG_ROUNDS')
