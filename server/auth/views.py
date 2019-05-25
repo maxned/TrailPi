@@ -1,10 +1,12 @@
 from flask import Blueprint, request, make_response, jsonify
 from flask.views import MethodView
 
-from server import bcrypt, db
-from server.models import User, BlacklistToken
+from server import bcrypt, db, User, BlacklistToken
 
 auth_blueprint = Blueprint('auth', __name__)
+
+''' we're not planning on allowing the creation of new users, but this should
+    be the way it would be done if we were to allow it
 
 class RegisterAPI(MethodView):
     """User Registration Resource"""
@@ -13,11 +15,11 @@ class RegisterAPI(MethodView):
         # get the post data
         post_data = request.get_json()
         # check if user already exists
-        user = User.query.filter_by(email=post_data.get('email')).first()
+        user = User.query.filter_by(username=post_data.get('username')).first()
         if not user:
             try:
                 user = User(
-                    email=post_data.get('email'),
+                    username=post_data.get('username'),
                     password=post_data.get('password')
                 )
                 # insert the user
@@ -43,7 +45,7 @@ class RegisterAPI(MethodView):
                 'message': 'User already exists. Please Log in.',
             }
             return make_response(jsonify(responseObject)), 202
-
+'''
 
 class LoginAPI(MethodView):
     """User Login Resource"""
@@ -54,7 +56,7 @@ class LoginAPI(MethodView):
         try:
             # fetch the user data
             user = User.query.filter_by(
-                email=post_data.get('email')
+                username=post_data.get('username')
             ).first()
             if user and bcrypt.check_password_hash(
                 user.password, post_data.get('password')
@@ -107,8 +109,8 @@ class UserAPI(MethodView):
                     'status': 'success',
                     'data': {
                         'user_id': user.id,
-                        'email': user.email,
-                        'admin': user.admin,
+                        'username': user.username,
+                        'permissions': user.permissions,
                         'registered_on': user.registered_on
                     }
                 }
