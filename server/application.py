@@ -207,6 +207,7 @@ def get_images(startDate, endDate, requested_sites):
   for record in results:
     imageInfo.append(
       {
+        'id': record.__dict__['pic_id'],
         'site': record.__dict__['site'],
         'timestamp': record.__dict__['date'], 
         'url': record.__dict__['url']
@@ -237,6 +238,16 @@ def download_file(filename):
     headers={"Content-Disposition": "attachment; filename={}".format(filename)}
   )
 
+<<<<<<< HEAD
+=======
+@app.route('/TrailPiServer/api/tags/<image_id>/<list:tags>', methods=['POST'])
+def add_tags(image_id, tags):
+  pass
+
+# SQL Models
+# TODO -> move these to another file. This is just for an elastic beanstalk test
+
+>>>>>>> web-dev
 class Pictures(db.Model):
   """Represents an entry for the Pictures table
   """
@@ -261,15 +272,18 @@ class Tags(db.Model):
   """
   __tablename__ = 'Tags'
 
-  pic_id = db.Column(INTEGER(unsigned=True), db.ForeignKey('Pictures.pic_id', ondelete='CASCADE', onupdate='CASCADE'), primary_key=True)
-  tag = db.Column(db.String(length=20), primary_key=True)
+  tag_id = db.Column(INTEGER(unsigned=True), primary_key=True, autoincrement=True)
+  pic_id = db.Column(INTEGER(unsigned=True), db.ForeignKey('Pictures.pic_id', ondelete='CASCADE', onupdate='CASCADE'))
+  tag = db.Column(db.String(length=20), nullable=False)
 
   def __init__(self, pic_id, tag):
     self.pic_id = pic_id
     self.tag = tag
 
   def __repr__(self):
-    return '<Tag(%r, %r)>' % self.id, self.tag
+    return '<Tag(%r, %r)>' % (self.id, self.tag)
+    
+db.create_all()
 
 if __name__ == '__main__':
   application.run(debug = True)
