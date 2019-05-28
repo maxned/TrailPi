@@ -23,21 +23,23 @@ application = app = Flask(__name__) # needs to be named "application" for elasti
 CORS(app)
 app.secret_key = 't_pi!sctkey%20190203#'
 
-# MySQL database initialization
+# environment variables 
+# AWS RDS configuration
 username = os.environ.get('RDS_USERNAME')
 password = os.environ.get('RDS_PASSWORD')
 endpoint = os.environ.get('RDS_ENDPOINT')
 instance = os.environ.get('RDS_INSTANCE')
-database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
-app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
-db = SQLAlchemy(app)
-app.url_map.converters['list'] = utils.ListConverter
-app.secret_key = 't_pi!sctkey%20190203#' 
 
 # AWS S3 configuration
 BUCKET_NAME = os.environ.get('BUCKET')
 AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY')
 AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY')
+
+database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+db = SQLAlchemy(app)
+app.url_map.converters['list'] = utils.ListConverter
+app.secret_key = 't_pi!sctkey%20190203#' 
 
 s3 = boto3.resource(
     's3',
@@ -147,10 +149,12 @@ def api_image_transfer():
 
     if file and is_allowed_file(file.filename):
         filename = secure_filename(file.filename)
+        image_name = filename[:-4] # strip filename extension
+        image_time = datetime.datetime.strptime(image_name, '%m%d%y-%H%M%S%f') # strip and format the timestamp
         bucket.Object(filename).put(Body=file)
 
         aws_s3_url = f'https://s3-us-west-2.amazonaws.com/{BUCKET_NAME}/{filename}'
-        new_data = Pictures(site=data['site'], date=utils.get_local_date(), url=aws_s3_url)
+        new_data = Pictures(site=data['site'], date=image_time, url=aws_s3_url)
 
         try:
             db.session.add(new_data)
