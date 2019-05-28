@@ -2,10 +2,21 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import './PicturePanel.scss';
 
+// for mapping site numbers to names
+import { selectOptions } from '../common/selectConfig'; 
+
 class PicturePanel extends React.Component {
   // given an array of tags, return them as a string
   buildTagString(tags) {
     return tags.join(', ');
+  }
+
+  // given a site number integer, return the matching name
+  mapSiteName(siteNumber) {
+    let siteObject = selectOptions.filter(option => {
+      return option.value === siteNumber;
+    });
+    return siteObject[0].label;
   }
 
   render() {
@@ -17,6 +28,7 @@ class PicturePanel extends React.Component {
         <div className='info-wrapper'>
           <div><b>Date:</b> {this.props.imageInfo.timestamp}</div>
           <div><b>Site No:</b> {this.props.imageInfo.site}</div>
+          <div><b>Site Name:</b> {this.mapSiteName(this.props.imageInfo.site)}</div>
           <div><b>Tags:</b> {() => this.buildTagString(this.props.tags)}</div>
         </div>
       </div>
