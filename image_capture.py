@@ -16,7 +16,6 @@ import json
 import time
 import signal
 import io
-import piexif
 import os
 
 # Global variables set in main
