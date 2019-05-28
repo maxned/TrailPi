@@ -47,7 +47,8 @@ def send_image(file_path):
     Returns the response from the server.
     """
 
-    url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/image_transfer'
+    url = 'http://127.0.0.1:5000/TrailPiServer/api/image_transfer'
+    # url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/image_transfer'
 
     data = {'site': get_site_num()}
 
@@ -76,7 +77,7 @@ def run_testing():
                 check_in()
                 break
             elif val == 1:
-                test_image = '12345.png' # required numerical naming convention for server
+                test_image = '040719-150848239536.png' # required numerical naming convention for server
                 send_image(test_image)
                 break
             elif val == 123:
