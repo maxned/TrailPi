@@ -1,7 +1,29 @@
-.picturesPage-wrapper {
+.pictures-wrapper {
     margin-top: 20px;
     height: 100%;
     display: flex;
     flex-wrap: wrap;
+    justify-content: flex-start;
+    margin-left: 25px;
+}
+
+.control-panel {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: row;
     justify-content: space-evenly;
+
+    .flex-left {
+        flex: 80%;
+        display: flex;
+        justify-content: flex-start;
+        margin-left: 50px;
+    }
+
+    .flex-right {
+        flex: 20%;
+        margin-right: 200px;
+        display: flex;
+        justify-content: space-between;
+    }
 }

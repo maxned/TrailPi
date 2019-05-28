@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import './PicturesPage.scss';
+import { Redirect } from 'react-router';
 
 import PicturePanel from '../pictures/PicturePanel';
 import { Input, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
@@ -10,16 +11,23 @@ class PicturesPage extends React.Component {
     super();
     this.state = {
       images: [],
+<<<<<<< HEAD
+      selectedImages: [], // array of objects -> {id, isSelected}
+=======
       isImageSelected: [], // array of booleans 
+>>>>>>> web-dev
       modalToggled: false,
       tags: null,
-      selectedSite: null
+      redirectHome: false
     };
-    this.downloadImage = this.downloadImage.bind(this);
+    this.downloadImages = this.downloadImages.bind(this);
     this.toggleModal = this.toggleModal.bind(this);
     this.addTags = this.addTags.bind(this);
     this.updateTags = this.updateTags.bind(this);
     this.saveTags = this.saveTags.bind(this);
+    this.selectImage = this.selectImage.bind(this);
+    this.goHome = this.goHome.bind(this);
+    this.deleteImage = this.deleteImage.bind(this);
   }
 
   componentDidMount() {
@@ -47,12 +55,18 @@ class PicturesPage extends React.Component {
     let response = await fetch(url);
     let data = await response.json();
 
-    this.setState({ images: data.images });
+    let selectedImages = []; // initialize selectedImages array 
+    data.images.map(image => {
+      selectedImages.push({
+        id: image.id,
+        isSelected: false
+      });
+    });
+    this.setState({ images: data.images, selectedImages });
   }
 
-  async downloadImage(imageName) {
+  async downloadImages(imageName) { // TODO
     let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/downloadFile/';
-
     url += imageName;
     window.open(url);
   }
@@ -85,9 +99,19 @@ class PicturesPage extends React.Component {
     this.setState(prevState => ({modalToggled: !prevState.modalToggled}))
   }
 
-  addTags(selectedSite) { // pop-up the modal
+  selectImage(imageId) {
+    let oldImageState = this.state.selectedImages.filter((image) => { // get the previous selection state
+      return image.id === imageId;
+    });
+    let tempImages = this.state.selectedImages.filter((image) => { // remove the old element
+      return image.id !== imageId;
+    });
+    tempImages.push({ id: oldImageState[0].id, isSelected: !oldImageState[0].isSelected });
+    this.setState({ selectedImages: tempImages });
+  }
+
+  addTags() { // pop-up the modal
     this.toggleModal();
-    this.setState({ selectedSite });
   }
 
   updateTags(event) {
@@ -99,27 +123,59 @@ class PicturesPage extends React.Component {
     this.toggleModal();
   }
 
+  goHome() {
+    this.setState({ redirectHome: true });
+  }
+
+  deleteImage() {
+
+  }
+
+  getClass(imageId) {
+    let image = this.state.selectedImages.filter((image) => {
+      return image.id === imageId;
+    });
+    if (image[0].isSelected === true) 
+      return 'picture-wrapper-selected';
+    else
+      return 'picture-wrapper';
+  }
+
   render() {
+    if (this.state.redirectHome) return <Redirect push to='/' />; // navigate to home
     return (
       <div className='picturesPage-wrapper'>
-        {this.state.images.map((image, key) => {
-          return (
-            <PicturePanel
-              picture={image.url}
-              date={image.timestamp}
-              siteNumber={image.site}
-              onPictureSelect={this.addTags}
-            />
-          );
-        })}
+        <div className='control-panel'>
+          <div className='flex-left'>
+            <Button color='primary' onClick={this.goHome}>Home</Button>          
+          </div>
+          <div className='flex-right'>
+            <Button color='success' onClick={this.addTags}>Add Tags</Button>
+            <Button color='warning' onClick={this.downloadImage}>Download</Button>
+            <Button color='danger' onClick={this.deleteImage}>Delete</Button>
+          </div>
+        </div>
+        <div className='pictures-wrapper'>
+          {this.state.images.map((image, key) => {
+            let className = this.getClass(image.id);
+            return (
+              <PicturePanel
+                key={key}
+                imageInfo={image}
+                className={className}
+                onPictureSelect={this.selectImage}
+              />
+            );
+          })}        
+        </div>
         <Modal isOpen={this.state.modalToggled} toggle={this.toggleModal} className={this.props.className}>
           <ModalHeader toggle={this.toggle}>Photo Tags</ModalHeader>
           <ModalBody>
-            <Input placeholder="tag1, tag2, tag3, etc..." onChange={(value) => this.updateTags(value)}/>
+            <Input placeholder='tag1, tag2, tag3, etc...' onChange={(value) => this.updateTags(value)}/>
           </ModalBody>
           <ModalFooter>
-            <Button color="primary" onClick={this.saveTags}>Submit</Button>{' '}
-            <Button color="secondary" onClick={this.toggleModal}>Cancel</Button>
+            <Button color='primary' onClick={this.saveTags}>Submit</Button>{' '}
+            <Button color='secondary' onClick={this.toggleModal}>Cancel</Button>
           </ModalFooter>
         </Modal>
       </div>

@@ -8,7 +8,7 @@ export const selectOptions = [
   { value: 7, label: 'Far Pond' },
   { value: 8, label: 'Fordyce Repeater' },
   { value: 9, label: 'Fordyce Pond' },
-  /*{ value: 10, label: 'Dan\'s Repeater' },
+  { value: 10, label: 'Dan\'s Repeater' },
   { value: 11, label: 'Dan\'s Pond' },
   { value: 12, label: 'Red House' },
   { value: 13, label: 'Blue Oak Tower' },
@@ -43,5 +43,5 @@ export const selectOptions = [
   { value: 43, label: 'K2' },
   { value: 44, label: 'MB1' },
   { value: 45, label: 'MB2' },
-  { value: 46, label: 'Scribner Gate' },*/
+  { value: 46, label: 'Scribner Gate' },
 ];
