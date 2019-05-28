@@ -11,11 +11,7 @@ class PicturesPage extends React.Component {
     super();
     this.state = {
       images: [],
-<<<<<<< HEAD
       selectedImages: [], // array of objects -> {id, isSelected}
-=======
-      isImageSelected: [], // array of booleans 
->>>>>>> web-dev
       modalToggled: false,
       tags: null,
       redirectHome: false
