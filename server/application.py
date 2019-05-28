@@ -238,8 +238,6 @@ def download_file(filename):
     headers={"Content-Disposition": "attachment; filename={}".format(filename)}
   )
 
-<<<<<<< HEAD
-=======
 @app.route('/TrailPiServer/api/tags/<image_id>/<list:tags>', methods=['POST'])
 def add_tags(image_id, tags):
   pass
@@ -247,7 +245,6 @@ def add_tags(image_id, tags):
 # SQL Models
 # TODO -> move these to another file. This is just for an elastic beanstalk test
 
->>>>>>> web-dev
 class Pictures(db.Model):
   """Represents an entry for the Pictures table
   """
