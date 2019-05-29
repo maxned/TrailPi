@@ -31,14 +31,14 @@ class Classifier:
 
     def get_animal_name(self, label):
         if label==0:
-            return "animal"
+            return True
         if label==1:
-            return "nothing"
+            return False
     
     def predict_animal(self, file):
         print("Predicting .................................")
         ar = self.convert_to_array(file)
-        ar = ar/255
+        ar = ar/255.0
         label = 1
         a = []
         a.append(ar)
@@ -48,7 +48,7 @@ class Classifier:
         #print(score)
         label_index = np.argmax(score)
         #print(label_index)
-        acc = np.max(score)
+        #acc = np.max(score)
         animal = self.get_animal_name(label_index)
         #print(animal)
         #print("The predicted image is  "+ animal +" with accuracy =    "+str(acc))
