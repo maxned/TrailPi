@@ -42,8 +42,10 @@ while(exit_program == False):
             exit_program = True
     else:
         file_name = input("ImageName: ")
-        prediction = cnn.predict_animal(file_name)
-        print('Prediction: '+ prediction)
+        if(cnn.predict_animal(file_name)):
+            print("Image contains animal or human in it.")
+        else:
+            print("Image does NOT contain an animal or human in it.")
         answer = input("Continue (Y/N): ")
         if answer == "N" or answer == "n":
             exit_program = True
