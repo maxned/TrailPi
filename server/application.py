@@ -2,6 +2,7 @@ from sys import version_info, exit
 assert (version_info > (3, 6)), "Python 3.6 or later is required."
 import logging
 from flask import Flask, request, jsonify, Response
+from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.mysql import INTEGER, TINYINT, DATETIME
@@ -12,6 +13,7 @@ import activity
 import json
 import boto3
 import datetime
+from auth.views import auth_blueprint
 
 UPLOAD_FOLDER = '/home/brody/GitHub/TrailPi/server/uploaded_images' # FIXME not the actual path
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg']) # TODO: support more extensions?
@@ -23,12 +25,17 @@ application = app = Flask(__name__) # needs to be named "application" for elasti
 CORS(app)
 app.secret_key = 't_pi!sctkey%20190203#'
 
-# environment variables 
+# environment variables
 # AWS RDS configuration
 username = os.environ.get('RDS_USERNAME')
 password = os.environ.get('RDS_PASSWORD')
 endpoint = os.environ.get('RDS_ENDPOINT')
 instance = os.environ.get('RDS_INSTANCE')
+database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
+app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
+db = SQLAlchemy(app)
+app.url_map.converters['list'] = utils.ListConverter
+app.secret_key = 't_pi!sctkey%20190203#'
 
 # AWS S3 configuration
 BUCKET_NAME = os.environ.get('BUCKET')
@@ -39,13 +46,17 @@ database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 db = SQLAlchemy(app)
 app.url_map.converters['list'] = utils.ListConverter
-app.secret_key = 't_pi!sctkey%20190203#' 
+app.secret_key = 't_pi!sctkey%20190203#'
 
 s3 = boto3.resource(
     's3',
     aws_access_key_id=AWS_ACCESS_KEY,
     aws_secret_access_key=AWS_SECRET_KEY)
 bucket = s3.Bucket(BUCKET_NAME)
+
+bcrypt = Bcrypt(app)
+app.register_blueprint(auth_blueprint)
+
 
 def is_allowed_site(site):
     """Returns whether passed site is valid
@@ -193,7 +204,7 @@ def get_files():
 
 @app.route('/TrailPiServer/api/images/<startDate>/<endDate>/<list:requested_sites>', methods=['GET'])
 def get_images(startDate, endDate, requested_sites):
-  ''' 
+  '''
     returns all of the images within the interval defined by startDate and endDate
 
     Arguments:
@@ -202,14 +213,14 @@ def get_images(startDate, endDate, requested_sites):
       requested_sites - list of sites in request
   '''
   results = db.session.query(Pictures).filter(Pictures.site.in_(requested_sites), Pictures.date >= startDate, Pictures.date <= endDate)
-  
+
   imageInfo = []
   for record in results:
     imageInfo.append(
       {
         'id': record.__dict__['pic_id'],
         'site': record.__dict__['site'],
-        'timestamp': record.__dict__['date'], 
+        'timestamp': record.__dict__['date'],
         'url': record.__dict__['url']
       }
     )
@@ -228,8 +239,8 @@ def download_file(filename):
   '''
   s3_client = boto3.client(
     's3',
-    aws_access_key_id=AWS_ACCESS_KEY, 
-    aws_secret_access_key=AWS_SECRET_KEY 
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY
   )
   file = s3_client.get_object(Bucket=BUCKET_NAME, Key=filename)
   return Response (
@@ -279,8 +290,84 @@ class Tags(db.Model):
 
   def __repr__(self):
     return '<Tag(%r, %r)>' % (self.id, self.tag)
-    
+
 db.create_all()
 
 if __name__ == '__main__':
   application.run(debug = True)
+
+class User(db.Model):
+    """ User Model for storing user related details """
+    __tablename__ = "Users"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(45), unique=True, nullable=False)
+    password = db.Column(db.String(45), nullable=False)
+    registered_on = db.Column(db.DateTime, nullable=False)
+    permissions = db.Column(db.Integer, nullable=False, default=1)
+
+    def __init__(self, username, password, permissions=1):
+        self.username = username
+        self.password = bcrypt.generate_password_hash(
+            password, app.config.get('BCRYPT_LOG_ROUNDS')
+        ).decode()
+        self.registered_on = datetime.datetime.now()
+        self.permissions = permissions
+
+    def encode_auth_token(self, user_id):
+        """Generates the Auth Token"""
+
+        try:
+            payload = {
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+                'iat': datetime.datetime.utcnow(),
+                'sub': user_id
+            }
+            return jwt.encode(
+                payload,
+                app.config.get('SECRET_KEY'),
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
+
+    @staticmethod
+    def decode_auth_token(auth_token):
+        """Validates the auth token"""
+
+        try:
+            payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
+            is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
+            if is_blacklisted_token:
+                return 'Token blacklisted. Please log in again.'
+            else:
+                return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again.'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again.'
+
+
+class BlacklistToken(db.Model):
+    """Token Model for storing JWT tokens"""
+    __tablename__ = 'BlacklistTokens'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    token = db.Column(db.String(500), unique=True, nullable=False)
+    blacklisted_on = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, token):
+        self.token = token
+        self.blacklisted_on = datetime.datetime.now()
+
+    def __repr__(self):
+        return '<id: token: {}'.format(self.token)
+
+    @staticmethod
+    def check_blacklist(auth_token):
+        # check whether auth token has been blacklisted
+        res = BlacklistToken.query.filter_by(token=str(auth_token)).first()
+        if res:
+            return True
+        else:
+            return False
