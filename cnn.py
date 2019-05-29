@@ -6,7 +6,7 @@ import cv2
 import keras
 from keras.utils import np_utils
 from keras.models import Sequential
-from keras.layers import Conv2D,MaxPooling2D,Dense,Flatten,Dropout
+from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPool2D, BatchNormalization
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import TensorBoard
@@ -20,7 +20,7 @@ def crop_image(img):
 
 data = []
 labels = []
-
+print("Loading animals folder...")
 animals = os.listdir("animals")
 for animal in animals:
     if animal.startswith('.'):
@@ -34,7 +34,7 @@ for animal in animals:
         data.append(np.array(resized_image))
         labels.append(0)
 
-
+print("Loading people folder...")
 people_images = os.listdir("people")
 for people in people_images:
     if people.startswith('.'):
@@ -47,7 +47,7 @@ for people in people_images:
         resized_image = img.resize((50, 50))
         data.append(np.array(resized_image))
         labels.append(0)
-
+print("Loading nothing folder...")
 nothing_images = os.listdir("nothing")
 for nothing in nothing_images:
     if nothing.startswith('.'):
