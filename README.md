@@ -7,7 +7,7 @@ ECS 193 Senior Design Project for a DIY Web Cameras Network
 
 To install packages that will work with the CNN model type into the termial:
 
-     `pip install -r requirements.txt` 
+     $ pip install -r requirements.txt 
 
 ### **Running the Script**
 The script used to run:
