@@ -7,10 +7,12 @@ from classifier import Classifier
 cnn = Classifier(json_file = 'model.json', weights_file = 'model.h5')
 exit_program = False
 while(exit_program == False):
-    type_input = input("Folder(F) or Single File (S)?: ")
+    type_input = input("Folder(F) or Single File(S)?: ")
     if type_input == "F" or type_input == "f":
-        os.mkdir('animals_and_humans')
-        os.mkdir('nothing')
+        if not os.path.exists('animals_and_humans'):
+            os.mkdir('animals_and_humans')
+        if not os.path.exists('nothing'):
+            os.mkdir('nothing')
         folder_name = input("Folder Name: ")
         test_images = os.listdir(folder_name)
         for image in test_images:
