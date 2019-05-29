@@ -5,7 +5,7 @@ ECS 193 Senior Design Project for a DIY Web Cameras Network
 
 ### Requirements
 
-To install packages that will work with the CNN model type into the termial:
+To install packages that will work with the CNN model type into the terminal:
 
      $ pip install -r requirements.txt 
 
@@ -14,7 +14,7 @@ The script used to run:
 
     $ python test.py
 
- The scrip will load in the model and then will ask the user if they want to apply the model on a folder or a single image :
+ The script will load in the model and then will ask the user if they want to apply the model on a folder or a single image :
 
     $ Folder(F) or Single File(S)?: _
 
@@ -24,7 +24,7 @@ The script used to run:
     $ Folder Name: folder_name_here
 
 2. Hit `Return` and the script will begin sorting the images into their respective folders (`animals_and_humans` or `nothing`).
-3. Once complete, the propt will ask if the user woulfd like to continue and sort other files or folders with the following prompt:
+3. Once complete, the prompt will ask if the user would like to continue and sort other files or folders with the following prompt:
 
         $ Continue (Y/N): _
 
@@ -36,7 +36,7 @@ The script used to run:
         $ ImageName: my_image.jpg 
 
 2. The script will then print out if the image contains an animal/human or if there is nothing in the image.
-3. Once complete, the propt will ask if the user woulfd like to continue and sort other files or folders with the following prompt:
+3. Once complete, the prompt will ask if the user would like to continue and sort other files or folders with the following prompt:
 
         $ Continue (Y/N): _ 
 4. If user selects `'N'` then the script will terminate, and if the user selects `'Y'` then the script will repeat the steps above asking if the user wants a folder or single file.
@@ -45,10 +45,10 @@ The script used to run:
 ## **Retraining the Image Classifier**
 
 1. Ensure that the **requirements** are installed before running the model.
-2. Ensure that the script `cnn.py` has  `animals`, `nothing` and `people` folder local to it. The reason the `animals` and `people` folder are kept seperate is in case the user may want to modify the classes to determine if its a person or animal instead. 
+2. Ensure that the script `cnn.py` has  `animals`, `nothing` and `people` folder local to it. The reason the `animals` and `people` folder are kept separate is in case the user may want to modify the classes to determine if its a person or animal instead. 
 3. In  a terminal window run:
 
-         $ pyhton cnn.py
+         $ python cnn.py
 
 4. The script is now creating a new model with the provided images.
 5. A `labels.npy` and `trail_pics.pny` file will be created, these are the numpy representation of the images, very useful if later the user decides to use the same images, the user would uncomment the following lines in the `cnn.py` file:
