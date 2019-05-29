@@ -61,9 +61,21 @@ class PicturesPage extends React.Component {
     this.setState({ images: data.images, selectedImages });
   }
 
-  async downloadImages(imageName) { // TODO
-    let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/downloadFile/';
-    url += imageName;
+  async downloadImages() {
+    let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/download/';
+    let imagesToDownload = this.state.selectedImages.filter(image => { // filter out selected images
+      return image.isSelected === true; 
+    });
+
+    for (let image of imagesToDownload) { // extract the url for each of the selected images
+      let currentImageData = this.state.images.filter(imageInfo => {
+        return imageInfo.id === image.id;
+      });
+      let splitStr = currentImageData[0].url.split('/');
+      let fileName = splitStr[splitStr.length - 1];
+      url += fileName + '+';
+    }
+    url = url.slice(0, -1);  // remove the trailing "+" from the url
     window.open(url);
   }
 
@@ -147,7 +159,7 @@ class PicturesPage extends React.Component {
           </div>
           <div className='flex-right'>
             <Button color='success' onClick={this.addTags}>Add Tags</Button>
-            <Button color='warning' onClick={this.downloadImage}>Download</Button>
+            <Button color='warning' onClick={this.downloadImages}>Download</Button>
             <Button color='danger' onClick={this.deleteImage}>Delete</Button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import trailPiLogo from './trailpi-logo.png';
 import './Sidebar.scss';
 
 import DatePicker from 'react-datepicker';
@@ -80,6 +81,9 @@ class Sidebar extends React.Component {
               Submit
             </Button>                  
           </Link>
+        </div>
+        <div className='logo-wrapper'>
+          <img src={trailPiLogo} alt='TrailPi' />
         </div>
       </div>
     );

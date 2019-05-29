@@ -1,7 +1,7 @@
 from sys import version_info, exit
 assert (version_info > (3, 6)), "Python 3.6 or later is required."
 import logging
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, send_file
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +13,8 @@ import activity
 import json
 import boto3
 import datetime
+import zipfile
+import io
 from auth.views import auth_blueprint
 
 UPLOAD_FOLDER = '/home/brody/GitHub/TrailPi/server/uploaded_images' # FIXME not the actual path
@@ -31,11 +33,6 @@ username = os.environ.get('RDS_USERNAME')
 password = os.environ.get('RDS_PASSWORD')
 endpoint = os.environ.get('RDS_ENDPOINT')
 instance = os.environ.get('RDS_INSTANCE')
-database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
-app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
-db = SQLAlchemy(app)
-app.url_map.converters['list'] = utils.ListConverter
-app.secret_key = 't_pi!sctkey%20190203#'
 
 # AWS S3 configuration
 BUCKET_NAME = os.environ.get('BUCKET')
@@ -56,7 +53,6 @@ bucket = s3.Bucket(BUCKET_NAME)
 
 bcrypt = Bcrypt(app)
 app.register_blueprint(auth_blueprint)
-
 
 def is_allowed_site(site):
     """Returns whether passed site is valid
@@ -202,6 +198,46 @@ def get_files():
   response = jsonify({'filenames': filenames})
   return response, 200
 
+@app.route('/TrailPiServer/api/download/<list:filenames>', methods=['GET'])
+def download_files(filenames):
+  '''
+    retrieves a file from S3 and returns a Response object with
+    "Content-Disposition: attachment", initiating a download from the user's browser
+    Arguments:
+      filenames: the list of files inside of the s3 bucket (filename extension included)
+  '''
+  s3_client = boto3.client(
+    's3',
+    aws_access_key_id=AWS_ACCESS_KEY, 
+    aws_secret_access_key=AWS_SECRET_KEY 
+  )
+
+  if len(filenames) == 1: # just download a single file
+    filename = filenames[0]
+    s3_response = s3_client.get_object(Bucket=BUCKET_NAME, Key=filename)
+    return Response(
+      s3_response['Body'].read(),
+      mimetype='text/plain',
+      headers={"Content-Disposition": "attachment; filename={}".format(filename)}
+    )
+  else:
+    zip_file = 'trailpi_images.zip'
+    with zipfile.ZipFile(zip_file, 'w') as zipf:
+      for filename in filenames:
+        s3_response = s3_client.get_object(Bucket=BUCKET_NAME, Key=filename)
+        data = s3_response['Body'].read()
+        with open(filename, 'wb') as file: # write the binary data to a file
+          file.write(data)
+
+        zipf.write(filename) # pack the file into a zipfile
+        os.remove(filename)
+       
+    return send_file(
+      zip_file, 
+      attachment_filename='trailpi_images.zip', 
+      as_attachment=True
+    )
+
 @app.route('/TrailPiServer/api/images/<startDate>/<endDate>/<list:requested_sites>', methods=['GET'])
 def get_images(startDate, endDate, requested_sites):
   '''
@@ -227,27 +263,6 @@ def get_images(startDate, endDate, requested_sites):
 
   response = jsonify({'images': imageInfo})
   return response, 200
-
-@app.route('/TrailPiServer/api/downloadFile/<filename>', methods=['GET'])
-def download_file(filename):
-  '''
-    retrieves a file from S3 and returns a Response object with
-    "Content-Disposition: attachment", initiating a download from the user's browser
-
-    Arguments:
-      filename: the name of the file inside of the s3 bucket (filename extension included)
-  '''
-  s3_client = boto3.client(
-    's3',
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY
-  )
-  file = s3_client.get_object(Bucket=BUCKET_NAME, Key=filename)
-  return Response (
-    file['Body'].read(),
-    mimetype='text/plain',
-    headers={"Content-Disposition": "attachment; filename={}".format(filename)}
-  )
 
 @app.route('/TrailPiServer/api/tags/<image_id>/<list:tags>', methods=['POST'])
 def add_tags(image_id, tags):
@@ -290,11 +305,6 @@ class Tags(db.Model):
 
   def __repr__(self):
     return '<Tag(%r, %r)>' % (self.id, self.tag)
-
-db.create_all()
-
-if __name__ == '__main__':
-  application.run(debug = True)
 
 class User(db.Model):
     """ User Model for storing user related details """
@@ -371,3 +381,9 @@ class BlacklistToken(db.Model):
             return True
         else:
             return False
+
+
+db.create_all()
+
+if __name__ == '__main__':
+  application.run(debug = True)
