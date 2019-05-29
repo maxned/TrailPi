@@ -1,7 +1,7 @@
 # TrailPi
 ECS 193 Senior Design Project for a DIY Web Cameras Network
 
-## Image recognotion using a 5-layer CNN (Convolutional Neural Network)
+## Image recognition using a 5-layer CNN (Convolutional Neural Network)
 
 ### Requirements
 
