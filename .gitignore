@@ -22,5 +22,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# latest requested zip file
+# latest requested zip file and pickles
 /server/*.zip
+/server/*.pickle

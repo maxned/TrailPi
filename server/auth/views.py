@@ -1,8 +1,13 @@
+import sys
+sys.path.append('..')
+
 from flask import Blueprint, request, make_response, jsonify
+from flask_bcrypt import Bcrypt
 from flask.views import MethodView
 
-from server import bcrypt, db, User, BlacklistToken
+from models.views import db, User, BlacklistToken
 
+bcrypt = Bcrypt()
 auth_blueprint = Blueprint('auth', __name__)
 
 ''' we're not planning on allowing the creation of new users, but this should
@@ -172,17 +177,17 @@ class LogoutAPI(MethodView):
             return make_response(jsonify(responseObject)), 403
 
 # define the API resources
-registration_view = RegisterAPI.as_view('register_api')
+# registration_view = RegisterAPI.as_view('register_api')
 login_view = LoginAPI.as_view('login_api')
 user_view = UserAPI.as_view('user_api')
 logout_view = LogoutAPI.as_view('logout_api')
 
 # add Rules for API Endpoints
-auth_blueprint.add_url_rule(
-    '/auth/register',
-    view_func=registration_view,
-    methods=['POST']
-)
+# auth_blueprint.add_url_rule(
+#    '/auth/register',
+#    view_func=registration_view,
+#    methods=['POST']
+# )
 auth_blueprint.add_url_rule(
     '/auth/login',
     view_func=login_view,
