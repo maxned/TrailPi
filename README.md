@@ -48,7 +48,8 @@ The script used to run:
 2. Ensure that the script `cnn.py` has  `animals`, `nothing` and `people` folder local to it. The reason the `animals` and `people` folder are kept seperate is in case the user may want to modify the classes to determine if its a person or animal instead. 
 3. In  a terminal window run:
 
-     $ pyhton cnn.py
+         $ pyhton cnn.py
+
 4. The script is now creating a new model with the provided images.
 5. A `labels.npy` and `trail_pics.pny` file will be created, these are the numpy representation of the images, very useful if later the user decides to use the same images, the user would uncomment the following lines in the `cnn.py` file:
 
