@@ -7,6 +7,9 @@ import keras
 from keras.utils import np_utils
 from keras.models import Sequential
 from keras.layers import Conv2D,MaxPooling2D,Dense,Flatten,Dropout
+from keras.optimizers import Adam
+from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import TensorBoard
 
 #create a cropper
 def crop_image(img):
@@ -20,35 +23,50 @@ labels = []
 
 animals = os.listdir("animals")
 for animal in animals:
-    
-    img = Image.open("animals/" + animal)
-    img = img.convert('RGB')
-    img = crop_image(img)
-    resized_image = img.resize((50, 50))
-    data.append(np.array(resized_image))
-    labels.append(0)
-
-useless_images = os.listdir("useless")
-for useless in useless_images:
-    if useless.startswith('.'): #removing any images that start with a '.' as that messes with the parser
-        print(f'{useless} not read')
+    if animal.startswith('.'):
+        print(f'{animal} not read')
     else:
-        img = Image.open("useless/" + useless)
+        img = Image.open("animals/" + animal)
         img = img.convert('RGB')
+        #remove this next line if the image does not need cropping
         img = crop_image(img)
         resized_image = img.resize((50, 50))
         data.append(np.array(resized_image))
         labels.append(0)
 
-false_positives = os.listdir("nothing")
-for false in false_positives:
-    
-    img = Image.open("nothing/" + false)
-    img = img.convert('RGB')
-    img = crop_image(img)
-    resized_image = img.resize((50, 50))
-    data.append(np.array(resized_image))
-    labels.append(1)        
+
+people_images = os.listdir("people")
+for people in people_images:
+    if people.startswith('.'):
+        print(f'{people} not read')
+    else:
+        img = Image.open("people/" + people)
+        img = img.convert('RGB')
+        #remove this next line if the image does not need cropping
+        img = crop_image(img)
+        resized_image = img.resize((50, 50))
+        data.append(np.array(resized_image))
+        labels.append(0)
+
+nothing_images = os.listdir("nothing")
+for nothing in nothing_images:
+    if nothing.startswith('.'):
+        print(f'{nothing} not read')
+    else:
+        img = Image.open("nothing/" + nothing)
+        img = img.convert('RGB')
+        #remove this next line if the image does not need cropping
+        img = crop_image(img)
+        resized_image = img.resize((50, 50))
+        data.append(np.array(resized_image))
+        labels.append(1)        
+
+#creating the data augmentation object so that the training data can be more than what we have
+datagen = ImageDataGenerator(
+        rotation_range=10,
+        zoom_range = 0.1,
+        width_shift_range=0.1,
+        height_shift_range=0.1)
 
 # Converting data and labels to np array
 trail_pics = np.array(data)
@@ -83,41 +101,66 @@ test_length = len(x_test)
 #lables split into train and test
 (y_train,y_test) = labels[(int)(0.1*data_length):],labels[:(int)(0.1*data_length)]
 
+datagen.fit(x_train)
+
 #Now we make the labels using one hot encoding
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 #making the Keras model with mulitple layers
-model=Sequential()
+model = Sequential()
 
-model.add(Conv2D(filters = 16,kernel_size = 2,padding="same",activation ="relu",input_shape =(50,50,3)))
-model.add(MaxPooling2D(pool_size = 2))
+model.add(Conv2D(32, kernel_size=5,input_shape=(50, 50, 3), activation = 'relu'))
+model.add(Conv2D(32, kernel_size=5, activation = 'relu'))
+model.add(MaxPool2D(2,2))
+model.add(BatchNormalization())
+model.add(Dropout(0.4))
 
-model.add(Conv2D(filters = 32,kernel_size = 2,padding="same",activation ="relu"))
-model.add(MaxPooling2D(pool_size = 2))
+model.add(Conv2D(64, kernel_size=3,activation = 'relu'))
+model.add(Conv2D(64, kernel_size=3,activation = 'relu'))
+model.add(MaxPool2D(2,2))
+model.add(BatchNormalization())
+model.add(Dropout(0.4))
 
-model.add(Conv2D(filters = 64,kernel_size = 2,padding = "same",activation ="relu"))
-model.add(MaxPooling2D(pool_size=2))
+model.add(Conv2D(128, kernel_size=3, activation = 'relu'))
+model.add(BatchNormalization())
 
-model.add(Dropout(0.2))
 model.add(Flatten())
-model.add(Dense(500,activation="relu"))
-model.add(Dropout(0.2))
-model.add(Dense(2,activation="softmax"))
-#uncomment next line to see the summary of the various layers, 
-#the shape of each filter and the number of parameters used
-#model.summary() 
+model.add(Dense(256, activation = "relu"))
+model.add(Dropout(0.4))
+model.add(Dense(128, activation = "relu"))
+model.add(Dropout(0.4))
+model.add(Dense(2, activation = "softmax"))
+
 
 #Now we need to compile the model
 # params:
 #              loss- 'ategorical_optimizer' is commonly used as the loss funciton for classification
 #         optimizer- 'adam' optimizer will tend to adjuts learning rate all throughout the training
 #          matrics - 'accuracy' is the easiest one to think about in terms of how accurate our fitting is
-model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', metrics = ['accuracy'])
+optimizer=Adam(lr=0.001)
+model.compile(optimizer = optimizer , loss = "categorical_crossentropy", metrics=["accuracy"])
 
+#uncomment next line to see the summary of the various layers, 
+#the shape of each filter and the number of parameters used
+#model.summary() 
+
+#To get a visualiation of the learning go to the location of the script and fid a folder called logs
+#in terminal change your directory to the logs folder 
+#example: cd C:\Users\Student\Desktop\DataSet\logs\1
+#to see tensorboard open up a command prompt, if using a virtual environment, activate it, and cd to location of logs
+#mentioned above. 
+# type: tensorboard --logdir .
+# the reason we use '.' is because we are in the directory that the log is in, if you're in 
+#another directory then after --logdir put the directory location
+#then open up a browser and go to: the site displayed on the terminal window, it will look somethign like: http://localhost:6006/
+#tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
+tensorboard = TensorBoard(log_dir="logs/1")
 
 #Training the model
-model.fit(x_train,y_train, batch_size = 500 ,epochs=10000, verbose=1)
+model_try = model.fit_generator(datagen.flow(x_train,y_train, batch_size=64),
+                              epochs = 1000, validation_data = (x_test,y_test),verbose = 1, steps_per_epoch=70,
+                               callbacks = [tensorboard])
 
 
 
