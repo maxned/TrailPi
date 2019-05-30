@@ -46,6 +46,7 @@ database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 app.secret_key = 't_pi!sctkey%20190203#'
 
+## TODO - do we need this if we have boto3.client?? ##
 s3 = boto3.resource(
     's3',
     aws_access_key_id=AWS_ACCESS_KEY,
@@ -185,12 +186,12 @@ def get_files():
   '''
     list all files inside of the S3 bucket
   '''
-  client = boto3.client(
+  s3_client = boto3.client(
       's3',
       aws_access_key_id=AWS_ACCESS_KEY,
       aws_secret_access_key=AWS_SECRET_KEY
   )
-  files = client.list_objects_v2(Bucket=BUCKET_NAME)
+  files = s3_client.list_objects_v2(Bucket=BUCKET_NAME)
 
   filenames = []
   for obj in files['Contents']:
@@ -268,6 +269,39 @@ def get_images(startDate, endDate, requested_sites):
 @app.route('/TrailPiServer/api/tags/<image_id>/<list:tags>', methods=['POST'])
 def add_tags(image_id, tags):
   pass
+
+# TODO - should probably be HTTP DELETE #
+@app.route('/TrailPiServer/api/delete/<list:image_ids>', methods=['POST'])
+def delete_images(image_ids):
+  auth_header = request.headers.get('Authorization') # verify auth token 
+  if auth_header:
+    auth_token = auth_header.split(" ")[1]
+  if auth_token:
+    resp = User.decode_auth_token(auth_token)
+    if not isinstance(resp, str): # if auth token is valid...
+      s3_client = boto3.client(
+        's3',
+        aws_access_key_id=AWS_ACCESS_KEY, 
+        aws_secret_access_key=AWS_SECRET_KEY 
+      )
+      for image_id in image_ids: 
+        result = db.session.query(Pictures).filter(Pictures.pic_id==image_id).first() # retrieve the image key from MySQL
+        s3_key = result.url.split('/')[-1]
+        db.session.query(Pictures).filter(Pictures.pic_id==image_id).delete() # delete the record from MySQL
+        db.session.commit()
+        s3_response = s3_client.delete_object(Bucket=BUCKET_NAME, Key=s3_key) # delete the physical image from S3
+        
+      response_object = {
+        'status': 'success',
+        'message': 'requested images successfully deleted'
+      }
+      return jsonify(response_object), 200
+      
+  response_object = {
+    'status': 'fail', 
+    'message': 'Provide a valid auth token'
+  }
+  return jsonify(response_object), 401
 
 if __name__ == '__main__':
   application.run(debug = True)
