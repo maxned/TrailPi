@@ -284,7 +284,6 @@ def delete_images(image_ids):
         aws_access_key_id=AWS_ACCESS_KEY, 
         aws_secret_access_key=AWS_SECRET_KEY 
       )
-      delete_error = False
       for image_id in image_ids: 
         result = db.session.query(Pictures).filter(Pictures.pic_id==image_id).first() # retrieve the image key from MySQL
         s3_key = result.url.split('/')[-1]
@@ -297,7 +296,7 @@ def delete_images(image_ids):
         'message': 'requested images successfully deleted'
       }
       return jsonify(response_object), 200
-
+      
   response_object = {
     'status': 'fail', 
     'message': 'Provide a valid auth token'
