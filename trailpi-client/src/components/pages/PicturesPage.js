@@ -148,9 +148,59 @@ class PicturesPage extends React.Component {
   }
 
   async handleAdminSubmit() {
-    this.toggleAdminModal();
-    console.log(this.state.username);
-    console.log(this.state.password);
+    this.toggleAdminModal(); // hide the modal
+    
+    // login to the server and get a JWT
+    let loginRoute = `${authRoute}login`;
+    let loginResponse = await fetch(loginRoute, { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: this.state.username,
+        password: this.state.password
+      }) 
+    });
+    let authToken = (await loginResponse.json()).auth_token;
+
+    if (!authToken) return;
+
+    const authRoute = 'http://localhost:5000/auth/';
+    const apiRoute = 'http://localhost:5000/TrailPiServer/api/';
+
+    // get the image ids of the image we want to remove
+    let imagesToDelete = this.state.selectedImages.filter(image => {
+      return image.isSelected === true;
+    });
+    imagesToDelete = imagesToDelete.map(image => image.id);
+
+    // updated selectedImages state
+    let newSelectedImages = this.state.selectedImages.filter(image => {
+      return image.isSelected === false;
+    });
+
+    this.setState({ images: filteredImages, selectedImages: newSelectedImages });
+
+    // pass the auth token and image ids to the server's delete route 
+    let deleteRoute = `${apiRoute}delete/${imagesToDelete.join('+')}`;
+    await fetch(deleteRoute, {
+      method: 'POST',
+      headers: { 'Authorization': `bearer ${authToken}` }
+    });
+
+    // logout of the server (blacklist the JWT)
+    let logoutRoute = `${authRoute}logout`;
+    await fetch(logoutRoute, {
+      method: 'POST',
+      headers: { 'Authorization': `bearer ${authToken}` }
+    })
+
+    // remove the deleted images from state
+    let filteredImages= this.state.images;
+    for (let id of imagesToDelete) {
+      filteredImages = filteredImages.filter(image => {
+        return image.id != id;
+      });
+    };
   }
 
   goHome() {
