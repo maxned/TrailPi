@@ -12,18 +12,23 @@ class PicturesPage extends React.Component {
     this.state = {
       images: [],
       selectedImages: [], // array of objects -> {id, isSelected}
-      modalToggled: false,
-      tags: null,
+      tagsModalToggled: false,
+      adminModalToggled: false,
+      tags: '',
+      username: '',
+      password: '',
       redirectHome: false
     };
     this.downloadImages = this.downloadImages.bind(this);
-    this.toggleModal = this.toggleModal.bind(this);
-    this.addTags = this.addTags.bind(this);
+    this.toggleTagsModal = this.toggleTagsModal.bind(this);
     this.updateTags = this.updateTags.bind(this);
-    this.saveTags = this.saveTags.bind(this);
+    this.handleTagSubmit = this.handleTagSubmit.bind(this);
+    this.toggleAdminModal = this.toggleAdminModal.bind(this);
+    this.updateUsername = this.updateUsername.bind(this);
+    this.updatePassword = this.updatePassword.bind(this);
+    this.handleAdminSubmit = this.handleAdminSubmit.bind(this);
     this.selectImage = this.selectImage.bind(this);
     this.goHome = this.goHome.bind(this);
-    this.deleteImage = this.deleteImage.bind(this);
   }
 
   componentDidMount() {
@@ -103,10 +108,6 @@ class PicturesPage extends React.Component {
     return dateString;
   }
 
-  toggleModal() {
-    this.setState(prevState => ({modalToggled: !prevState.modalToggled}))
-  }
-
   selectImage(imageId) {
     let oldImageState = this.state.selectedImages.filter((image) => { // get the previous selection state
       return image.id === imageId;
@@ -118,8 +119,8 @@ class PicturesPage extends React.Component {
     this.setState({ selectedImages: tempImages });
   }
 
-  addTags() { // pop-up the modal
-    this.toggleModal();
+  toggleTagsModal() {
+    this.setState(prevState => ({ tagsModalToggled: !prevState.tagsModalToggled }));
   }
 
   updateTags(event) {
@@ -127,16 +128,33 @@ class PicturesPage extends React.Component {
     this.setState({ tags });
   }
 
-  saveTags() { // hide the modal and save the user input
-    this.toggleModal();
+  handleTagSubmit() { // hide the modal and save the user input
+    this.toggleTagsModal();
+    console.log(this.state.tags);
+  }
+
+  toggleAdminModal() { // pop up a modal which prompts for admin credentials and password
+    this.setState(prevState => ({ adminModalToggled: !prevState.adminModalToggled }));
+  }
+
+  updateUsername(event) {
+    let username = event.target.value;
+    this.setState({ username });
+  }
+
+  updatePassword(event) {
+    let password = event.target.value;
+    this.setState({ password });
+  }
+
+  async handleAdminSubmit() {
+    this.toggleAdminModal();
+    console.log(this.state.username);
+    console.log(this.state.password);
   }
 
   goHome() {
     this.setState({ redirectHome: true });
-  }
-
-  deleteImage() {
-
   }
 
   getClass(imageId) {
@@ -158,9 +176,9 @@ class PicturesPage extends React.Component {
             <Button color='primary' onClick={this.goHome}>Home</Button>          
           </div>
           <div className='flex-right'>
-            <Button color='success' onClick={this.addTags}>Add Tags</Button>
+            <Button color='success' onClick={this.toggleTagsModal}>Add Tags</Button>
             <Button color='warning' onClick={this.downloadImages}>Download</Button>
-            <Button color='danger' onClick={this.deleteImage}>Delete</Button>
+            <Button color='danger' onClick={this.toggleAdminModal}>Delete</Button>
           </div>
         </div>
         <div className='pictures-wrapper'>
@@ -176,14 +194,25 @@ class PicturesPage extends React.Component {
             );
           })}        
         </div>
-        <Modal isOpen={this.state.modalToggled} toggle={this.toggleModal} className={this.props.className}>
+        <Modal isOpen={this.state.tagsModalToggled} toggle={this.toggleTagsModal} className='tagsModal'>
           <ModalHeader toggle={this.toggle}>Photo Tags</ModalHeader>
           <ModalBody>
-            <Input placeholder='tag1, tag2, tag3, etc...' onChange={(value) => this.updateTags(value)}/>
+            <Input placeholder='tag1, tag2, tag3, etc...' onChange={(event) => this.updateTags(event)}/>
           </ModalBody>
           <ModalFooter>
-            <Button color='primary' onClick={this.saveTags}>Submit</Button>{' '}
-            <Button color='secondary' onClick={this.toggleModal}>Cancel</Button>
+            <Button color='primary' onClick={this.handleTagSubmit}>Submit</Button>{' '}
+            <Button color='secondary' onClick={this.toggleTagsModal}>Cancel</Button>
+          </ModalFooter>
+        </Modal>
+        <Modal isOpen={this.state.adminModalToggled} toggle={this.toggleAdminModal} className='adminModal'>
+          <ModalHeader toggle={this.toggle}>Enter Admin Credentials</ModalHeader>
+          <ModalBody>
+            <Input placeholder='username' onChange={(event) => this.updateUsername(event)} />
+            <Input type='password' placeholder='password' onChange={(event) => this.updatePassword(event)} style={{marginTop: '25px'}}/>
+          </ModalBody>
+          <ModalFooter>
+            <Button color='primary' onClick={this.handleAdminSubmit}>Submit</Button>{' '}
+            <Button color='secondary' onClick={this.toggleAdminModal}>Cancel</Button>
           </ModalFooter>
         </Modal>
       </div>
