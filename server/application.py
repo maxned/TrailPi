@@ -37,15 +37,13 @@ logger = logging.getLogger('TrailServerMain')
 ### INITIALIZE APP ###
 application = app = Flask(__name__) # needs to be named "application" for elastic beanstalk
 CORS(app)
-app.secret_key = 't_pi!sctkey%20190203#'
 
 ### INITIALIZE DATABASE CONNECTION
 with app.app_context():
   db.init_app(app)
-
+  
 database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
-app.url_map.converters['list'] = utils.ListConverter
 app.secret_key = 't_pi!sctkey%20190203#'
 
 s3 = boto3.resource(
@@ -58,6 +56,9 @@ bucket = s3.Bucket(BUCKET_NAME)
 with app.app_context():
   bcrypt.init_app(app)
 app.register_blueprint(auth_blueprint)
+
+### CUSTOM ROUTE UTILITIES ###
+app.url_map.converters['list'] = utils.ListConverter
 
 def is_allowed_site(site):
     """Returns whether passed site is valid

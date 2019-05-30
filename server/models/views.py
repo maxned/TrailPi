@@ -4,6 +4,10 @@ sys.path.append('..')
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.mysql import INTEGER, TINYINT, DATETIME
 from utils import get_local_date
+import jwt
+import datetime
+
+SECRET_KEY = 't_pi!sctkey%20190203#'
 
 db = SQLAlchemy() # will be initialized in application.py
 
@@ -48,15 +52,16 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(45), unique=True, nullable=False)
-    password = db.Column(db.String(45), nullable=False)
+    password = db.Column(db.String(255), nullable=False)
     registered_on = db.Column(db.DateTime, nullable=False)
     permissions = db.Column(db.Integer, nullable=False, default=1)
 
-    def __init__(self, username, password, permissions=1):
+    def __init__(self, username, password, bcrypt, permissions=1):
         self.username = username
         self.password = bcrypt.generate_password_hash(
-            password, app.config.get('BCRYPT_LOG_ROUNDS')
+            password, rounds=12
         ).decode()
+        print(self.password)
         self.registered_on = datetime.datetime.now()
         self.permissions = permissions
 
@@ -65,13 +70,13 @@ class User(db.Model):
 
         try:
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=5),
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=0, seconds=25),
                 'iat': datetime.datetime.utcnow(),
                 'sub': user_id
             }
             return jwt.encode(
                 payload,
-                app.config.get('SECRET_KEY'),
+                SECRET_KEY,
                 algorithm='HS256'
             )
         except Exception as e:
@@ -82,7 +87,7 @@ class User(db.Model):
         """Validates the auth token"""
 
         try:
-            payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
+            payload = jwt.decode(auth_token, SECRET_KEY)
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'

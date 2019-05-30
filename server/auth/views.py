@@ -10,9 +10,10 @@ from models.views import db, User, BlacklistToken
 bcrypt = Bcrypt()
 auth_blueprint = Blueprint('auth', __name__)
 
-''' we're not planning on allowing the creation of new users, but this should
+'''
+    we're not planning on allowing the creation of new users, but this should
     be the way it would be done if we were to allow it
-
+'''
 class RegisterAPI(MethodView):
     """User Registration Resource"""
 
@@ -25,7 +26,8 @@ class RegisterAPI(MethodView):
             try:
                 user = User(
                     username=post_data.get('username'),
-                    password=post_data.get('password')
+                    password=post_data.get('password'),
+                    bcrypt=bcrypt
                 )
                 # insert the user
                 db.session.add(user)
@@ -50,7 +52,6 @@ class RegisterAPI(MethodView):
                 'message': 'User already exists. Please Log in.',
             }
             return make_response(jsonify(responseObject)), 202
-'''
 
 class LoginAPI(MethodView):
     """User Login Resource"""
@@ -63,6 +64,9 @@ class LoginAPI(MethodView):
             user = User.query.filter_by(
                 username=post_data.get('username')
             ).first()
+            print(bcrypt.check_password_hash(
+                user.__dict__['password'], post_data.get('password')
+            ))
             if user and bcrypt.check_password_hash(
                 user.password, post_data.get('password')
             ):
@@ -177,17 +181,17 @@ class LogoutAPI(MethodView):
             return make_response(jsonify(responseObject)), 403
 
 # define the API resources
-# registration_view = RegisterAPI.as_view('register_api')
+registration_view = RegisterAPI.as_view('register_api')
 login_view = LoginAPI.as_view('login_api')
 user_view = UserAPI.as_view('user_api')
 logout_view = LogoutAPI.as_view('logout_api')
 
 # add Rules for API Endpoints
-# auth_blueprint.add_url_rule(
-#    '/auth/register',
-#    view_func=registration_view,
-#    methods=['POST']
-# )
+auth_blueprint.add_url_rule(
+    '/auth/register',
+    view_func=registration_view,
+    methods=['POST']
+)
 auth_blueprint.add_url_rule(
     '/auth/login',
     view_func=login_view,
