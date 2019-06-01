@@ -25,7 +25,8 @@ while(exit_program == False):
                         print(image + " not read")
                     else:
                         path_image = "./" + folder_name + "/" + image
-                        if(cnn.predict_animal(path_image)):
+                        animal, accuracy = cnn.predict_animal(path_image)
+                        if(animal):
                             os.rename(path_image, "./animals_and_humans/" + image)
                             count_true +=1
                         else:
@@ -42,10 +43,11 @@ while(exit_program == False):
             exit_program = True
     else:
         file_name = input("ImageName: ")
-        if(cnn.predict_animal(file_name)):
-            print("Image contains animal or human in it.")
+        animal, accuracy = cnn.predict_animal(file_name)
+        if(animal):
+            print("Image contains animal or human in it with :{0:.2f} accuracy".format(accuracy))
         else:
-            print("Image does NOT contain an animal or human in it.")
+            print("Image does NOT contain an animal or human in it with :{0:.2f} accuracy".format(accuracy))
         answer = input("Continue (Y/N): ")
         if answer == "N" or answer == "n":
             exit_program = True

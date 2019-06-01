@@ -17,10 +17,11 @@ class Classifier:
         # load weights into new model
         self.model.load_weights(weights_file)
         print('Loaded Model From Disk successfully')
+        
         # compile the model
         #self.model.compile(loss = 'categorical_crossentropy', optimizer = 'adam', 
         #                    metrics = ['accuracy'])
-        print('Compiled model successfully')
+        #print('Compiled model successfully')
     
     def convert_to_array(self, image):
         image = cv2.imread(image)
@@ -36,7 +37,7 @@ class Classifier:
             return False
     
     def predict_animal(self, file):
-        print("Predicting .................................")
+     
         ar = self.convert_to_array(file)
         ar = ar/255.0
         label = 1
@@ -48,11 +49,9 @@ class Classifier:
         #print(score)
         label_index = np.argmax(score)
         #print(label_index)
-        #acc = np.max(score)
+        accuracy = np.max(score)
         animal = self.get_animal_name(label_index)
-        #print(animal)
-        #print("The predicted image is  "+ animal +" with accuracy =    "+str(acc))
-        return animal
+        return animal, accuracy
 
 
 
