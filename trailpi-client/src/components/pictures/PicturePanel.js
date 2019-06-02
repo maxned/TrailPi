@@ -29,7 +29,7 @@ class PicturePanel extends React.Component {
           <div><b>Date:</b> {this.props.imageInfo.timestamp}</div>
           <div><b>Site No:</b> {this.props.imageInfo.site}</div>
           <div><b>Site Name:</b> {this.mapSiteName(this.props.imageInfo.site)}</div>
-          <div><b>Tags:</b> {() => this.buildTagString(this.props.tags)}</div>
+          <div><b>Tags:</b> {this.buildTagString(this.props.imageInfo.tags)}</div>
         </div>
       </div>
     );
@@ -40,7 +40,6 @@ PicturePanel.propTypes = {
   imageInfo: PropTypes.object.isRequired,
   onPictureSelect: PropTypes.func.isRequired,
   className: PropTypes.string.isRequired,
-  tags: PropTypes.array
 }
 
 export default PicturePanel;

@@ -4,6 +4,7 @@ import './PicturesPage.scss';
 import { Redirect } from 'react-router';
 
 import PicturePanel from '../pictures/PicturePanel';
+import { login } from '../../utils/requests';
 import { Input, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 
 class PicturesPage extends React.Component {
@@ -14,13 +15,18 @@ class PicturesPage extends React.Component {
       selectedImages: [], // array of objects -> {id, isSelected}
       tagsModalToggled: false,
       adminModalToggled: false,
+      invalidModalToggled: false,
       tags: '',
       username: '',
       password: '',
-      redirectHome: false
+      redirectHome: false,
+      selectedAction: ''
     };
     this.downloadImages = this.downloadImages.bind(this);
+    this.toggleInvalidModal = this.toggleInvalidModal.bind(this);
     this.toggleTagsModal = this.toggleTagsModal.bind(this);
+    this.initTagging = this.initTagging.bind(this);
+    this.initDelete = this.initDelete.bind(this);
     this.updateTags = this.updateTags.bind(this);
     this.handleTagSubmit = this.handleTagSubmit.bind(this);
     this.toggleAdminModal = this.toggleAdminModal.bind(this);
@@ -119,6 +125,29 @@ class PicturesPage extends React.Component {
     this.setState({ selectedImages: tempImages });
   }
 
+  initTagging() {
+    this.setState({ selectedAction: 'tag' })
+    let selectedImages = this.state.selectedImages.filter(image => {
+      return image.isSelected === true;
+    });
+    if (selectedImages.length > 1) {
+      this.toggleInvalidModal();
+      return;
+    } 
+
+    this.toggleAdminModal();
+  }
+
+  initDelete() {
+    this.setState({ selectedAction: 'delete' });
+    this.toggleAdminModal();
+  }
+
+  // if the user has selected more than one image to tag, pop up an invalid modal
+  toggleInvalidModal() {
+    this.setState(prevState => ({ invalidModalToggled: !prevState.invalidModalToggled }));
+  }
+
   toggleTagsModal() {
     this.setState(prevState => ({ tagsModalToggled: !prevState.tagsModalToggled }));
   }
@@ -128,9 +157,36 @@ class PicturesPage extends React.Component {
     this.setState({ tags });
   }
 
-  handleTagSubmit() { // hide the modal and save the user input
+  async handleTagSubmit() { // hide the modal and save the user input
     this.toggleTagsModal();
-    console.log(this.state.tags);
+    const baseRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/api';
+    let selectedImage = this.state.selectedImages.filter(image => {
+      return image.isSelected === true;
+    })[0];
+    let imageToTag = this.state.images.filter(image => {
+      return image.id === selectedImage.id;
+    })[0];
+    let imageId = imageToTag.id;
+    
+    // login and get an auth token 
+    let authToken = await login(this.state.username, this.state.password);
+    if (!authToken) return;
+
+    // make the request to the server to add the tags
+    let tagsRoute = `${baseRoute}/tags/${imageId}/${this.state.tags.split(' ').join('').replace(/,/g,'+')}`;
+    let response = await fetch(tagsRoute, {
+      method: 'POST',
+      headers: { 'Authorization': `bearer ${authToken}` }
+    });
+
+    if (response.status === 200) { // update react state
+      let newImages = this.state.images.filter(image => {
+        return image.id != imageToTag.id;
+      });
+      imageToTag.tags = this.state.tags.split(' ').join('').split(',');
+      newImages.push(imageToTag);
+      this.setState({ images: newImages });
+    }
   }
 
   toggleAdminModal() { // pop up a modal which prompts for admin credentials and password
@@ -149,36 +205,28 @@ class PicturesPage extends React.Component {
 
   async handleAdminSubmit() {
     this.toggleAdminModal(); // hide the modal
-    
-    // login to the server and get a JWT
-    let loginRoute = `${authRoute}login`;
-    let loginResponse = await fetch(loginRoute, { 
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: this.state.username,
-        password: this.state.password
-      }) 
-    });
-    let authToken = (await loginResponse.json()).auth_token;
-
+    if (this.state.selectedAction === 'delete') 
+      this.deleteImages();
+    else {
+      let authToken = await login(this.state.username, this.state.password);
+      if (!authToken) return;
+      this.toggleTagsModal(); 
+    }
+  }
+  
+  async deleteImages() {
+    // attempt login with the admin credentials and only continue if credentials are valid
+    let authToken = await login(this.state.username, this.state.password);
     if (!authToken) return;
 
-    const authRoute = 'http://localhost:5000/auth/';
-    const apiRoute = 'http://localhost:5000/TrailPiServer/api/';
+    const authRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/auth/';
+    const apiRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/';
 
     // get the image ids of the image we want to remove
     let imagesToDelete = this.state.selectedImages.filter(image => {
       return image.isSelected === true;
     });
     imagesToDelete = imagesToDelete.map(image => image.id);
-
-    // updated selectedImages state
-    let newSelectedImages = this.state.selectedImages.filter(image => {
-      return image.isSelected === false;
-    });
-
-    this.setState({ images: filteredImages, selectedImages: newSelectedImages });
 
     // pass the auth token and image ids to the server's delete route 
     let deleteRoute = `${apiRoute}delete/${imagesToDelete.join('+')}`;
@@ -195,12 +243,19 @@ class PicturesPage extends React.Component {
     })
 
     // remove the deleted images from state
-    let filteredImages= this.state.images;
+    let filteredImages = this.state.images;
     for (let id of imagesToDelete) {
       filteredImages = filteredImages.filter(image => {
         return image.id != id;
       });
     };
+
+    // updated selectedImages state
+    let newSelectedImages = this.state.selectedImages.filter(image => {
+      return image.isSelected === false;
+    });
+
+    this.setState({ images: filteredImages, selectedImages: newSelectedImages });
   }
 
   goHome() {
@@ -226,9 +281,9 @@ class PicturesPage extends React.Component {
             <Button color='primary' onClick={this.goHome}>Home</Button>          
           </div>
           <div className='flex-right'>
-            <Button color='success' onClick={this.toggleTagsModal}>Add Tags</Button>
+            <Button color='success' onClick={this.initTagging}>Add Tags</Button>
             <Button color='warning' onClick={this.downloadImages}>Download</Button>
-            <Button color='danger' onClick={this.toggleAdminModal}>Delete</Button>
+            <Button color='danger' onClick={this.initDelete}>Delete</Button>
           </div>
         </div>
         <div className='pictures-wrapper'>
@@ -245,7 +300,7 @@ class PicturesPage extends React.Component {
           })}        
         </div>
         <Modal isOpen={this.state.tagsModalToggled} toggle={this.toggleTagsModal} className='tagsModal'>
-          <ModalHeader toggle={this.toggle}>Photo Tags</ModalHeader>
+          <ModalHeader toggle={this.toggle}>Enter tags split by ,</ModalHeader>
           <ModalBody>
             <Input placeholder='tag1, tag2, tag3, etc...' onChange={(event) => this.updateTags(event)}/>
           </ModalBody>
@@ -263,6 +318,12 @@ class PicturesPage extends React.Component {
           <ModalFooter>
             <Button color='primary' onClick={this.handleAdminSubmit}>Submit</Button>{' '}
             <Button color='secondary' onClick={this.toggleAdminModal}>Cancel</Button>
+          </ModalFooter>
+        </Modal>
+        <Modal isOpen={this.state.invalidModalToggled} toggle={this.toggleInvalidModal} className='adminModal'>
+          <ModalHeader toggle={this.toggle}>Error: please select one image</ModalHeader>
+          <ModalFooter>
+            <Button color='primary' onClick={this.toggleInvalidModal}>Ok</Button>{' '}
           </ModalFooter>
         </Modal>
       </div>
