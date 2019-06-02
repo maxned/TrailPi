@@ -254,12 +254,15 @@ def get_images(startDate, endDate, requested_sites):
 
   imageInfo = []
   for record in results:
+    tag_query = db.session.query(Tags).filter(Tags.pic_id == record.__dict__['pic_id'])
+    tags = map(lambda tag_record: tag_record.__dict__['tag'], tag_query)
     imageInfo.append(
       {
         'id': record.__dict__['pic_id'],
         'site': record.__dict__['site'],
         'timestamp': record.__dict__['date'],
-        'url': record.__dict__['url']
+        'url': record.__dict__['url'],
+        'tags': list(tags)
       }
     )
 
@@ -268,12 +271,33 @@ def get_images(startDate, endDate, requested_sites):
 
 @app.route('/TrailPiServer/api/tags/<image_id>/<list:tags>', methods=['POST'])
 def add_tags(image_id, tags):
-  pass
+  auth_header = request.headers.get('Authorization')
+  if auth_header:
+    auth_token = auth_header.split(" ")[1]
+  if auth_token:
+    resp = User.decode_auth_token(auth_token)
+    if not isinstance(resp, str): # if auth token is valid...
+      for tag in tags: 
+        new_entry = Tags(pic_id=image_id, tag=tag)
+        db.session.add(new_entry)
+        db.session.commit()
+
+      response_object = {
+        'status': 'success',
+        'message': 'tags added successfully'
+      }
+      return jsonify(response_object), 200
+
+  response_object = {
+    'status': 'fail', 
+    'message': 'Provide a valid auth token'
+  }
+  return jsonify(response_object), 401
 
 # TODO - should probably be HTTP DELETE #
 @app.route('/TrailPiServer/api/delete/<list:image_ids>', methods=['POST'])
 def delete_images(image_ids):
-  auth_header = request.headers.get('Authorization') # verify auth token 
+  auth_header = request.headers.get('Authorization')
   if auth_header:
     auth_token = auth_header.split(" ")[1]
   if auth_token:

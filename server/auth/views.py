@@ -59,15 +59,11 @@ class LoginAPI(MethodView):
     def post(self):
         # get the post data
         post_data = request.get_json()
-        print(post_data)
         try:
             # fetch the user data
             user = User.query.filter_by(
                 username=post_data.get('username')
             ).first()
-            print(bcrypt.check_password_hash(
-                user.__dict__['password'], post_data.get('password')
-            ))
             if user and bcrypt.check_password_hash(
                 user.password, post_data.get('password')
             ):
@@ -86,7 +82,6 @@ class LoginAPI(MethodView):
                 }
                 return make_response(jsonify(responseObject)), 404
         except Exception as e:
-            print(e)
             responseObject = {
                 'status': 'fail',
                 'message': 'Try again'
