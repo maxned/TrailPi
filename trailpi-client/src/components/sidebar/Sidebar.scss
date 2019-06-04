@@ -2,6 +2,14 @@
   height: 100vh;
   overflow-y: auto;
 
+    @media (max-width: 768px) {
+      overflow-y: none;
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      overflow-y: none;
+    }
+
   h2 {
     margin-top: 25px;
   }
