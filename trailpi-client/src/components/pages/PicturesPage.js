@@ -69,6 +69,7 @@ class PicturesPage extends React.Component {
         isSelected: false
       });
     });
+    console.log(data.images);
     this.setState({ images: data.images, selectedImages });
   }
 

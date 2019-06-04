@@ -10,6 +10,7 @@ import activity
 import json
 import boto3
 import datetime
+from pytz import timezone
 import zipfile
 import io
 from models.views import db, Pictures, Tags, User
