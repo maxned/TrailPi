@@ -69,7 +69,6 @@ class PicturesPage extends React.Component {
         isSelected: false
       });
     });
-    console.log(data.images);
     this.setState({ images: data.images, selectedImages });
   }
 
@@ -221,7 +220,8 @@ class PicturesPage extends React.Component {
     if (!authToken) return;
 
     const authRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/auth/';
-    const apiRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/';
+    //const apiRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/';
+    const apiRoute = 'http://localhost:5000/TrailPiServer/api/';
 
     // get the image ids of the image we want to remove
     let imagesToDelete = this.state.selectedImages.filter(image => {
@@ -231,6 +231,7 @@ class PicturesPage extends React.Component {
 
     // pass the auth token and image ids to the server's delete route 
     let deleteRoute = `${apiRoute}delete/${imagesToDelete.join('+')}`;
+    console.log(deleteRoute);
     await fetch(deleteRoute, {
       method: 'POST',
       headers: { 'Authorization': `bearer ${authToken}` }
