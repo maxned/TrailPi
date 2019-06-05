@@ -1,11 +1,13 @@
 {
     "site_number": 1,
+    "camera_type": "day",
+
     "resolution": [3280, 2464],
     "inter_capture_delay": 0.5,
     "quality": 10,
     "capture_chunk_size": 3,
+    "ml_animal_threshold": 0.5,
 
-    "camera_type": "day",
     "day_to_night_analog_threshold": 7.5,
     "day_to_night_digital_threshold": 1.1,
     "night_to_day_analog_threshold": 3,
