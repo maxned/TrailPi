@@ -10,7 +10,6 @@ import activity
 import json
 import boto3
 import datetime
-from pytz import timezone
 import zipfile
 import io
 from models.views import db, Pictures, Tags, User
@@ -174,6 +173,20 @@ def api_image_transfer():
         except:
             logger.warning('Had to rollback during entry insertion')
             db.session.rollback()
+
+        # retrieve picture id from uploaded image
+        pic_entry = db.session.query(Pictures).filter(Pictures.url==aws_s3_url).first()
+
+        # create a new entry in the tags table
+        new_entry = Tags(pic_id=pic_entry.pic_id, tag=data['tag'])
+
+        try:
+          db.session.add(new_entry)
+          db.session.commit()
+          db.session.close()
+        except:
+          logger.warning('Had to rollback during entry insertion')
+          db.session.rollback()
 
         response = jsonify({'status': 'image upload SUCCESS'})
         return response, 200
