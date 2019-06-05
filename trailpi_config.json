@@ -6,6 +6,8 @@
     "inter_capture_delay": 0.5,
     "quality": 10,
     "capture_chunk_size": 3,
+
+    "ml_tagging": true,
     "ml_animal_threshold": 0.5,
 
     "day_to_night_analog_threshold": 7.5,

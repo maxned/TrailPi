@@ -12,7 +12,6 @@ import time
 import requests
 import json
 import helpers
-import predictor
 
 # Global variables set in main
 log = None
@@ -21,12 +20,18 @@ config = None
 def upload_image(image_name):
     image_path = "{}/{}".format(config["image_folder"], image_name) # Add the directory
 
-    # Use an ML algorithm to automatically tag the image before uploading it
-    accuracy = predict_animal(image_path)
-    if accuracy >= config["ml_animal_threshold"]:
-        tag = "animal (ML)"
-    else:
-        tag = "empty (ML)"
+    tag = ""
+    if config["ml_tagging"]:
+        import predictor
+
+        # Use an ML algorithm to automatically tag the image before uploading it
+        accuracy = predictor.predict_animal(image_path)
+        log.info("Image ({}) predicted to be animal with accuracy: {}".format(image_name, accuracy))
+
+        if accuracy >= config["ml_animal_threshold"]:
+            tag = "animal (ML)"
+        else:
+            tag = "empty (ML)"
 
     site_data = { "site" : config["site_number"], "tag" : tag }
     image_data = None
