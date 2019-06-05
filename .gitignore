@@ -3,3 +3,4 @@ images/
 logs/
 crashlogs/
 .DS_Store
+*.py[cod]
