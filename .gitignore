@@ -2,3 +2,4 @@ __pycache__/
 images/
 logs/
 crashlogs/
+.DS_Store
