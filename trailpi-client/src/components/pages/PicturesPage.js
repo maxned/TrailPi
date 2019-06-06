@@ -5,7 +5,7 @@ import { Redirect } from 'react-router';
 
 import PicturePanel from '../pictures/PicturePanel';
 import { login } from '../../utils/requests';
-import { Input, Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Input, Button, Modal, ModalHeader, ModalBody, ModalFooter, Alert } from 'reactstrap';
 
 class PicturesPage extends React.Component {
   constructor() {
@@ -20,7 +20,8 @@ class PicturesPage extends React.Component {
       username: '',
       password: '',
       redirectHome: false,
-      selectedAction: ''
+      selectedAction: '',
+      invalidAlertRaised: false
     };
     this.downloadImages = this.downloadImages.bind(this);
     this.toggleInvalidModal = this.toggleInvalidModal.bind(this);
@@ -35,6 +36,7 @@ class PicturesPage extends React.Component {
     this.handleAdminSubmit = this.handleAdminSubmit.bind(this);
     this.selectImage = this.selectImage.bind(this);
     this.goHome = this.goHome.bind(this);
+    this.toggleInvalidAlert = this.toggleInvalidAlert.bind(this);
   }
 
   componentDidMount() {
@@ -64,11 +66,13 @@ class PicturesPage extends React.Component {
 
     let selectedImages = []; // initialize selectedImages array 
     for (let image of data.images) {
+      image.timestamp = image.timestamp.replace('GMT', 'PST');
       selectedImages.push({
         id: image.id,
         isSelected: false
       })
     }
+
     this.setState({ images: data.images, selectedImages });
   }
 
@@ -77,6 +81,10 @@ class PicturesPage extends React.Component {
     let imagesToDownload = this.state.selectedImages.filter(image => { // filter out selected images
       return image.isSelected === true; 
     });
+
+    if (imagesToDownload.length === 0) {
+      return;
+    }
 
     for (let image of imagesToDownload) { // extract the url for each of the selected images
       let currentImageData = this.state.images.filter(imageInfo => {
@@ -170,7 +178,10 @@ class PicturesPage extends React.Component {
     
     // login and get an auth token 
     let authToken = await login(this.state.username, this.state.password);
-    if (!authToken) return;
+    if (!authToken) {
+      this.toggleInvalidAlert();
+      return;
+    } 
 
     // make the request to the server to add the tags
     let tagsRoute = `${baseRoute}/tags/${imageId}/${this.state.tags.split(' ').join('').replace(/,/g,'+')}`;
@@ -183,7 +194,11 @@ class PicturesPage extends React.Component {
       let newImages = this.state.images.filter(image => {
         return image.id !== imageToTag.id;
       });
+      let oldTags = this.state.images.filter(image => {
+        return image.id === imageToTag.id;
+      })[0].tags;
       imageToTag.tags = this.state.tags.split(' ').join('').split(',');
+      imageToTag.tags.push(oldTags);
       newImages.push(imageToTag);
       this.setState({ images: newImages });
     }
@@ -209,7 +224,10 @@ class PicturesPage extends React.Component {
       this.deleteImages();
     else {
       let authToken = await login(this.state.username, this.state.password);
-      if (!authToken) return;
+      if (!authToken) {
+        this.toggleInvalidAlert();
+        return;
+      }
       this.toggleTagsModal(); 
     }
   }
@@ -217,7 +235,10 @@ class PicturesPage extends React.Component {
   async deleteImages() {
     // attempt login with the admin credentials and only continue if credentials are valid
     let authToken = await login(this.state.username, this.state.password);
-    if (!authToken) return;
+    if (!authToken) {
+      this.toggleInvalidAlert();
+      return;
+    } 
 
     const authRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/auth/';
     const apiRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/';
@@ -272,10 +293,17 @@ class PicturesPage extends React.Component {
       return 'picture-wrapper';
   }
 
+  toggleInvalidAlert() {
+    this.setState(prevState => ({ invalidAlertRaised: !prevState.invalidAlertRaised}));
+  }
+
   render() {
     if (this.state.redirectHome) return <Redirect push to='/' />; // navigate to home
     return (
       <div className='picturesPage-wrapper'>
+        <Alert color='danger' isOpen={this.state.invalidAlertRaised} toggle={this.toggleInvalidAlert}>
+          Error - invalid administrator credentials. Please try again.
+        </Alert>
         <div className='control-panel'>
           <div className='flex-left'>
             <Button color='primary' onClick={this.goHome}>Home</Button>          
