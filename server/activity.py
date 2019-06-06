@@ -12,5 +12,5 @@ def check_in(site):
 # just initialize each site with current time
 print('initializing site activity')
 site_activity = {}
-for site in range(1, 41):
+for site in range(1, 46):
     site_activity[str(site)] = datetime.datetime.now()

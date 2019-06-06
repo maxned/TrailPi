@@ -11,5 +11,5 @@ export const routes = [
     path: '/pictures',
     exact: true,
     component: PicturesPage
-  }
+  },
 ];

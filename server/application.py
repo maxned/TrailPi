@@ -151,12 +151,12 @@ def api_image_transfer():
     logger.debug('Data: {}'.format(data))
 
     if file and is_allowed_file(file.filename):
-        s3_client = boto3.client(
+        s3_resource = boto3.resource(
             's3',
             aws_access_key_id=AWS_ACCESS_KEY, 
             aws_secret_access_key=AWS_SECRET_KEY 
         )
-        bucket = s3_client.Bucket(BUCKET_NAME)
+        bucket = s3_resource.Bucket(BUCKET_NAME)
         filename = secure_filename(file.filename)
         image_name = filename[:-4] # strip filename extension
         image_time = datetime.datetime.strptime(image_name, '%m-%d-%y--%H-%M-%S-%f') # strip and format the timestamp
@@ -348,7 +348,7 @@ def check_sites():
   for site, checked_timestamp in activity.site_activity.items():
     time_difference = datetime.datetime.now() - checked_timestamp
     minutes_diff = time_difference.total_seconds() / 60
-    if minutes_diff > 30:
+    if minutes_diff < 30:
       site_status.append({ 'site': site, 'alive': True })
     else:
       site_status.append({ 'site': site, 'alive': False })
