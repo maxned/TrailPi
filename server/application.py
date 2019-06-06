@@ -46,13 +46,6 @@ database_uri = f'mysql://{username}:{password}@{endpoint}/{instance}'
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 app.secret_key = 't_pi!sctkey%20190203#'
 
-## TODO - do we need this if we have boto3.client?? ##
-s3 = boto3.resource(
-    's3',
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY)
-bucket = s3.Bucket(BUCKET_NAME)
-
 ### INITIALIZE BCRYPT AND AUTH ###
 with app.app_context():
   bcrypt.init_app(app)
@@ -345,4 +338,4 @@ def delete_images(image_ids):
   return jsonify(response_object), 401
 
 if __name__ == '__main__':
-  application.run(debug = True)
+  application.run()
