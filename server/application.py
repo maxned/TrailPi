@@ -151,12 +151,12 @@ def api_image_transfer():
     logger.debug('Data: {}'.format(data))
 
     if file and is_allowed_file(file.filename):
-        s3_client = boto3.client(
+        s3_resource = boto3.resource(
             's3',
             aws_access_key_id=AWS_ACCESS_KEY, 
             aws_secret_access_key=AWS_SECRET_KEY 
         )
-        bucket = s3_client.Bucket(BUCKET_NAME)
+        bucket = s3_resource.Bucket(BUCKET_NAME)
         filename = secure_filename(file.filename)
         image_name = filename[:-4] # strip filename extension
         image_time = datetime.datetime.strptime(image_name, '%m-%d-%y--%H-%M-%S-%f') # strip and format the timestamp
