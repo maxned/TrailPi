@@ -348,7 +348,7 @@ def check_sites():
   for site, checked_timestamp in activity.site_activity.items():
     time_difference = datetime.datetime.now() - checked_timestamp
     minutes_diff = time_difference.total_seconds() / 60
-    if minutes_diff > 30:
+    if minutes_diff < 30:
       site_status.append({ 'site': site, 'alive': True })
     else:
       site_status.append({ 'site': site, 'alive': False })
