@@ -27,6 +27,7 @@ class RegisterAPI(MethodView):
                 user = User(
                     username=post_data.get('username'),
                     password=post_data.get('password'),
+                    permissions=post_data.get('permissions'),
                     bcrypt=bcrypt
                 )
                 # insert the user
