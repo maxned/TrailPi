@@ -160,7 +160,7 @@ def api_image_transfer():
     if file and is_allowed_file(file.filename):
         filename = secure_filename(file.filename)
         image_name = filename[:-4] # strip filename extension
-        image_time = datetime.datetime.strptime(image_name, '%m%d%y-%H%M%S%f') # strip and format the timestamp
+        image_time = datetime.datetime.strptime(image_name, '%m-%d-%y--%H-%M-%S-%f') # strip and format the timestamp
         bucket.Object(filename).put(Body=file)
 
         aws_s3_url = f'https://s3-us-west-2.amazonaws.com/{BUCKET_NAME}/{filename}'
@@ -177,16 +177,18 @@ def api_image_transfer():
         # retrieve picture id from uploaded image
         pic_entry = db.session.query(Pictures).filter(Pictures.url==aws_s3_url).first()
 
-        # create a new entry in the tags table
-        new_entry = Tags(pic_id=pic_entry.pic_id, tag=data['tag'])
+        # if the request has a tag, add it to the tags table
+        if data['tag']:
+          # create a new entry in the tags table
+          new_entry = Tags(pic_id=pic_entry.pic_id, tag=data['tag'])
 
-        try:
-          db.session.add(new_entry)
-          db.session.commit()
-          db.session.close()
-        except:
-          logger.warning('Had to rollback during entry insertion')
-          db.session.rollback()
+          try:
+            db.session.add(new_entry)
+            db.session.commit()
+            db.session.close()
+          except:
+            logger.warning('Had to rollback during entry insertion')
+            db.session.rollback()
 
         response = jsonify({'status': 'image upload SUCCESS'})
         return response, 200
@@ -312,6 +314,7 @@ def add_tags(image_id, tags):
 @app.route('/TrailPiServer/api/delete/<list:image_ids>', methods=['POST'])
 def delete_images(image_ids):
   auth_header = request.headers.get('Authorization')
+  logger.debug(f'Headers: {request.headers}')
   if auth_header:
     auth_token = auth_header.split(" ")[1]
   if auth_token:

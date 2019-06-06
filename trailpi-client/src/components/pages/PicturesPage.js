@@ -63,12 +63,12 @@ class PicturesPage extends React.Component {
     let data = await response.json();
 
     let selectedImages = []; // initialize selectedImages array 
-    data.images.map(image => {
+    for (let image of data.images) {
       selectedImages.push({
         id: image.id,
         isSelected: false
-      });
-    });
+      })
+    }
     this.setState({ images: data.images, selectedImages });
   }
 
@@ -159,7 +159,7 @@ class PicturesPage extends React.Component {
 
   async handleTagSubmit() { // hide the modal and save the user input
     this.toggleTagsModal();
-    const baseRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/api';
+    const baseRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api';
     let selectedImage = this.state.selectedImages.filter(image => {
       return image.isSelected === true;
     })[0];
@@ -176,12 +176,12 @@ class PicturesPage extends React.Component {
     let tagsRoute = `${baseRoute}/tags/${imageId}/${this.state.tags.split(' ').join('').replace(/,/g,'+')}`;
     let response = await fetch(tagsRoute, {
       method: 'POST',
-      headers: { 'Authorization': `bearer ${authToken}` }
+      headers: { 'Authorization': 'bearer ' + authToken }
     });
 
     if (response.status === 200) { // update react state
       let newImages = this.state.images.filter(image => {
-        return image.id != imageToTag.id;
+        return image.id !== imageToTag.id;
       });
       imageToTag.tags = this.state.tags.split(' ').join('').split(',');
       newImages.push(imageToTag);
@@ -220,8 +220,7 @@ class PicturesPage extends React.Component {
     if (!authToken) return;
 
     const authRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/auth/';
-    //const apiRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/';
-    const apiRoute = 'http://localhost:5000/TrailPiServer/api/';
+    const apiRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/';
 
     // get the image ids of the image we want to remove
     let imagesToDelete = this.state.selectedImages.filter(image => {
@@ -231,24 +230,23 @@ class PicturesPage extends React.Component {
 
     // pass the auth token and image ids to the server's delete route 
     let deleteRoute = `${apiRoute}delete/${imagesToDelete.join('+')}`;
-    console.log(deleteRoute);
     await fetch(deleteRoute, {
       method: 'POST',
-      headers: { 'Authorization': `bearer ${authToken}` }
+      headers: { 'Authorization': 'bearer ' + authToken }
     });
 
     // logout of the server (blacklist the JWT)
     let logoutRoute = `${authRoute}logout`;
     await fetch(logoutRoute, {
       method: 'POST',
-      headers: { 'Authorization': `bearer ${authToken}` }
+      headers: { 'Authorization': 'bearer ' + authToken }
     })
 
     // remove the deleted images from state
     let filteredImages = this.state.images;
     for (let id of imagesToDelete) {
       filteredImages = filteredImages.filter(image => {
-        return image.id != id;
+        return image.id !== id;
       });
     };
 

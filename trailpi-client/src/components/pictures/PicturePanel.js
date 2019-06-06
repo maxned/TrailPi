@@ -23,7 +23,7 @@ class PicturePanel extends React.Component {
     return (
       <div className='panel-wrapper'>
         <div className={this.props.className} onClick={() => this.props.onPictureSelect(this.props.imageInfo.id)}>
-          <img src={this.props.imageInfo.url} />
+          <img src={this.props.imageInfo.url} alt='' />
         </div>
         <div className='info-wrapper'>
           <div><b>Date:</b> {this.props.imageInfo.timestamp}</div>

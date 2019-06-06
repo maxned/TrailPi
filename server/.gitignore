@@ -1,5 +1,6 @@
 __pycache__
 .elasticbeanstalk
+.ebextensions
 trailpi-server
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

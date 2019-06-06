@@ -8,5 +8,5 @@ export const login = async (username, password) => {
     body: JSON.stringify({ username, password })
   });
   let authToken = (await loginResponse.json()).auth_token;
-  return authToken
+  return authToken;
 };
