@@ -151,6 +151,12 @@ def api_image_transfer():
     logger.debug('Data: {}'.format(data))
 
     if file and is_allowed_file(file.filename):
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=AWS_ACCESS_KEY, 
+            aws_secret_access_key=AWS_SECRET_KEY 
+        )
+        bucket = s3_client.Bucket(BUCKET_NAME)
         filename = secure_filename(file.filename)
         image_name = filename[:-4] # strip filename extension
         image_time = datetime.datetime.strptime(image_name, '%m-%d-%y--%H-%M-%S-%f') # strip and format the timestamp
@@ -303,7 +309,6 @@ def add_tags(image_id, tags):
   }
   return jsonify(response_object), 401
 
-# TODO - should probably be HTTP DELETE #
 @app.route('/TrailPiServer/api/delete/<list:image_ids>', methods=['POST'])
 def delete_images(image_ids):
   auth_header = request.headers.get('Authorization')
@@ -336,6 +341,19 @@ def delete_images(image_ids):
     'message': 'Provide a valid auth token'
   }
   return jsonify(response_object), 401
+
+@app.route('/TrailPiServer/api/checkSites', methods=['GET'])
+def check_sites():
+  site_status = []
+  for site, checked_timestamp in activity.site_activity.items():
+    time_difference = datetime.datetime.now() - checked_timestamp
+    minutes_diff = time_difference.total_seconds() / 60
+    if minutes_diff > 30:
+      site_status.append({ 'site': site, 'alive': True })
+    else:
+      site_status.append({ 'site': site, 'alive': False })
+
+  return jsonify(site_status), 200
 
 if __name__ == '__main__':
   application.run()
