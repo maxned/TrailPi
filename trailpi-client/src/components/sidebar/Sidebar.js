@@ -39,7 +39,7 @@ class Sidebar extends React.Component {
   render() {
     return (
       <div className='sidebar-wrapper'>
-        <h2>date select</h2>
+        <h2>Date Select</h2>
         <div className='datepicker-wrapper'>
           <DatePicker 
             selected={this.state.startDate}
