@@ -1,7 +1,7 @@
 import sys
 import os
 from PIL import Image
-from classifier import Classifier
+from classifier.classifier import Classifier
 
 
 cnn = Classifier(json_file = 'model.json', weights_file = 'model.h5')
