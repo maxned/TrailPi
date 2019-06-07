@@ -18,7 +18,7 @@ else:
 
 config = json.load(open(config_file))
 
-site_data = { "site" : config["site_number"] }
+site_data = { "site" : str(config["site_number"]) }
 headers = { "Content-Type" : "application/json" }
 
 while True:
