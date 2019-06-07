@@ -1,7 +1,7 @@
 export const defaultLocation = {
-  lat: 38.511,
+  lat: 38.505,
   lng: -122.147,
-  zoom: 14.5
+  zoom: 14
 }
 
 export const mapMarkers = [

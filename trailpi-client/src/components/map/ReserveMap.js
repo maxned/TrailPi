@@ -6,11 +6,13 @@ import { defaultLocation, mapMarkers } from '../common/mapConfig';
 import { getSiteActivity } from '../../utils/requests';
 
 const greenIcon = new Leaflet.Icon({
-  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png'
+  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  popupAnchor: [1, -25]
 });
 
 const redIcon = new Leaflet.Icon({
-  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png'
+  iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  popupAnchor: [1, -25]
 })
 
 class ReserveMap extends React.Component {
@@ -37,7 +39,7 @@ class ReserveMap extends React.Component {
             return (
               <Marker position={marker.position} key={key}>
                 <Popup>
-                  <b>{marker.name}</b>
+                  <center><b>{marker.name} ({key + 1})</b></center>
                 </Popup>
               </Marker>
             );
@@ -46,7 +48,7 @@ class ReserveMap extends React.Component {
             return (
               <Marker position={marker.position} key={key} icon={greenIcon}>
                 <Popup>
-                  <b>{marker.name}</b>
+                  <center><b>{marker.name} ({key + 1})</b></center>
                 </Popup>
               </Marker>
             );
@@ -55,7 +57,7 @@ class ReserveMap extends React.Component {
             return (
               <Marker position={marker.position} key={key} icon={redIcon}>
                 <Popup>
-                  <b>{marker.name}</b>
+                  <center><b>{marker.name} ({key + 1})</b></center>
                 </Popup>
               </Marker>
             );

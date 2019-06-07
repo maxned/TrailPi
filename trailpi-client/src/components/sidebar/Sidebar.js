@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import trailPiLogo from './trailpi-logo.png';
+import trailPiLogo from './trailpi-logo.svg';
 import './Sidebar.scss';
 
 import DatePicker from 'react-datepicker';
@@ -61,6 +61,7 @@ class Sidebar extends React.Component {
             isMulti 
             name='sites'
             options={selectOptions}
+            getOptionLabel={option => `${option.label} (${option.value})`}
             onChange={this.handleCameraSelect}
             className='basic-multi-select'
             classNamePrefix='select'
