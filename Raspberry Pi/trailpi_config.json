@@ -26,10 +26,10 @@
     "image_timestamp_format": "%m-%d-%y--%H-%M-%S-%f",
 
     "image_folder": "images",
-    "image_upload_url": "http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/image_transfer",
+    "image_upload_url": "http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/TrailPiServer/api/image_transfer",
     "image_upload_check_interval_sec": 30,
     "image_upload_valid_image_delta": 10,
 
-    "check_in_url": "http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/check_in",
+    "check_in_url": "http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/TrailPiServer/api/check_in",
     "check_in_interval_sec": 1800
 }
