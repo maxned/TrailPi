@@ -28,6 +28,7 @@ class ReserveMap extends React.Component {
 
   render() {
     const position = [defaultLocation.lat, defaultLocation.lng];
+    console.log(this.state.siteActivity);
     return (
       <Map center={position} zoom={defaultLocation.zoom} zoomControl={false}>
         <TileLayer
