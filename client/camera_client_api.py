@@ -48,7 +48,7 @@ def send_image(file_path):
     """
 
     url = 'http://127.0.0.1:5000/TrailPiServer/api/image_transfer'
-    # url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/image_transfer'
+    # url = 'http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/TrailPiServer/api/image_transfer'
 
     data = {'site': get_site_num()}
 

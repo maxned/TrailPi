@@ -1,6 +1,6 @@
 // login to the server and return a JSON Web Token
 export const login = async (username, password) => {
-  const authRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/auth/';
+  const authRoute = 'http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/auth/';
   let loginRoute = `${authRoute}login`;
   let loginResponse = await fetch(loginRoute, {
     method: 'POST',
@@ -12,7 +12,7 @@ export const login = async (username, password) => {
 };
 
 export const getSiteActivity = async () => {
-  const activityRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/checkSites';
+  const activityRoute = 'http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/TrailPiServer/api/checkSites';
   let response = await fetch(activityRoute);
   let activity = await response.json();
   return activity;

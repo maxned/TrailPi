@@ -48,7 +48,7 @@ class PicturesPage extends React.Component {
   }
 
   async getImages(options) {
-    let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/images/';
+    let url = 'http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/TrailPiServer/api/images/';
     let requestStartDate = this.buildDateString(options.startDate);
     let requestEndDate = this.buildDateString(options.endDate);
 
@@ -77,7 +77,7 @@ class PicturesPage extends React.Component {
   }
 
   async downloadImages() {
-    let url = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/download/';
+    let url = 'http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/TrailPiServer/api/download/';
     let imagesToDownload = this.state.selectedImages.filter(image => { // filter out selected images
       return image.isSelected === true; 
     });
@@ -167,7 +167,7 @@ class PicturesPage extends React.Component {
 
   async handleTagSubmit() { // hide the modal and save the user input
     this.toggleTagsModal();
-    const baseRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api';
+    const baseRoute = 'http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/TrailPiServer/api';
     let selectedImage = this.state.selectedImages.filter(image => {
       return image.isSelected === true;
     })[0];
@@ -240,8 +240,8 @@ class PicturesPage extends React.Component {
       return;
     } 
 
-    const authRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/auth/';
-    const apiRoute = 'http://flask-server.wqwtbemyjw.us-west-2.elasticbeanstalk.com/TrailPiServer/api/';
+    const authRoute = 'http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/auth/';
+    const apiRoute = 'http://trailpi-server.awy73zfwn2.us-west-2.elasticbeanstalk.com/TrailPiServer/api/';
 
     // get the image ids of the image we want to remove
     let imagesToDelete = this.state.selectedImages.filter(image => {

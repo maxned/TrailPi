@@ -18,6 +18,7 @@
     transition: All 0.2s ease-in-out;
     -webkit-transition: All 0.2s ease-in-out;
     -moz-transition: All 0.2s ease-in-out;
+    overflow: hidden;
 
     img {
       border-radius: 25px;
@@ -51,6 +52,7 @@
     -moz-box-shadow:    3px 3px 5px 1px green;
     -webkit-box-shadow: 3px 3px 5px 1px green;
     box-shadow:         3px 3px 5px 1px green;
+    overflow: hidden;
 
     img {
       border-radius: 25px;
