@@ -1,0 +1,63 @@
+.sidebar-wrapper {
+  height: 100vh;
+  overflow-y: auto;
+
+    @media (max-width: 768px) {
+      overflow-y: none;
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      overflow-y: none;
+    }
+
+  h2 {
+    margin-top: 25px;
+  }
+
+  .datepicker-wrapper {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 20px;
+    height: 75px;
+
+    input {
+      border-radius: 5px;
+      padding-left: 5px;
+    }
+  }
+
+  .site-select {
+    width: 80%;
+    margin: 0 auto;
+    margin-top: 25px;
+  }
+
+  .submit-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+  }
+
+  .logo-wrapper {
+    max-width: 80%;
+    margin: 0 auto;
+    margin-top: 50vh;
+
+    @media (max-width: 768px) {
+      margin-top: 20vh;
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      margin-top: 50vh;
+      max-width: 50%;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}

@@ -1,0 +1,28 @@
+.mapPage-wrapper {
+  display: flex;
+  flex-direction: row;
+
+  .sidebar-wrapper {
+    flex: 20%;
+
+    @media (max-width: 768px) {
+      flex: 100%;
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      flex: 100%;
+    }
+  }
+
+  .map-wrapper {
+    flex: 80%;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      display: none;
+    }
+  }
+}

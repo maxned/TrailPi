@@ -1,0 +1,45 @@
+.pictures-wrapper {
+    margin-top: 20px;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    margin-bottom: 50px;
+}
+
+.control-panel {
+    padding-left: 5%;
+    padding-right: 5%;
+    margin-top: 25px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+
+    .flex-left {
+        flex: 80%;
+        display: flex;
+        justify-content: flex-start;
+
+        @media (max-width: 768px) {
+            flex: 50%;
+        }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+            flex: 60%;
+        }
+    }
+
+    .flex-right {
+        flex: 20%;
+        display: flex;
+        justify-content: space-between;
+
+        @media (max-width: 768px) {
+            flex: 50%;
+        }
+
+        @media (min-width: 768px) and (max-width: 1024px) {
+            flex: 40%;
+        }
+    }
+}
